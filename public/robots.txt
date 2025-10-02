@@ -1,0 +1,6 @@
+# Permitir a todos los user-agents rastrear todo el sitio
+User-agent: *
+Allow: /
+
+# Ubicación del Sitemap
+Sitemap: https://wycredito.com/sitemap.xml
