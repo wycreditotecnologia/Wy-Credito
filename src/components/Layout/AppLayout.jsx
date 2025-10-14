@@ -1,23 +1,23 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Container, Box } from '@mui/material';
+import { AppBar, Toolbar } from '@mui/material';
 // Aquí podrías poner el logo de Wy en formato SVG o PNG como un componente
 // import WyLogo from '../../assets/wy-logo.svg';
 
 const AppLayout = ({ children }) => {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <div className="flex flex-col min-h-screen bg-background">
       <AppBar position="static" color="transparent" elevation={1} sx={{ bgcolor: 'background.paper' }}>
         <Toolbar>
           {/* <WyLogo height={32} /> */}
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: 'text.primary', ml: 2, fontFamily: 'Segoe UI' }}>
+          <h6 className="text-base font-semibold ml-2" style={{ flexGrow: 1 }}>
             Wy Credito
-          </Typography>
+          </h6>
         </Toolbar>
       </AppBar>
-      <Container component="main" sx={{ flexGrow: 1, py: { xs: 2, sm: 4 } }}>
+      <div className="max-w-7xl mx-auto px-4 py-2 sm:py-4 w-full">
         {children}
-      </Container>
-    </Box>
+      </div>
+    </div>
   );
 };
 

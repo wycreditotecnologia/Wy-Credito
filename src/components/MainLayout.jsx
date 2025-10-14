@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Stepper, Step, StepLabel, Typography, Container, Paper } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { Stepper, Step, StepLabel } from '@mui/material';
 
 // Importar todos los componentes de formulario
 import FormularioEmpresa from './forms/FormularioEmpresa';
@@ -14,21 +13,7 @@ import PantallaResumen from './forms/PantallaResumen';
 // Importar el orquestador
 import OrquestadorWally from '../services/orquestador';
 
-// Styled components
-const StyledContainer = styled(Container)(({ theme }) => ({
-  minHeight: '100vh',
-  paddingTop: theme.spacing(4),
-  paddingBottom: theme.spacing(4),
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-}));
-
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(4),
-  borderRadius: theme.spacing(2),
-  boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
-  background: 'rgba(255, 255, 255, 0.95)',
-  backdropFilter: 'blur(10px)',
-}));
+// Contenedores con Tailwind (se sustituyen Container/Paper/Box por divs)
 
 const StyledStepper = styled(Stepper)(({ theme }) => ({
   marginBottom: theme.spacing(4),
@@ -206,7 +191,7 @@ const MainLayout = () => {
     const currentStepData = steps.find(step => step.id === currentStep);
     
     if (!currentStepData) {
-      return <Typography>Paso no encontrado</Typography>;
+      return <p className="text-sm">Paso no encontrado</p>;
     }
 
     const commonProps = {
@@ -248,41 +233,36 @@ const MainLayout = () => {
         );
       
       default:
-        return <Typography>Componente no encontrado</Typography>;
+        return <p className="text-sm">Componente no encontrado</p>;
     }
   };
 
   if (!sessionId) {
     return (
-      <StyledContainer maxWidth="md">
-        <StyledPaper>
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-            <Typography variant="h6">Inicializando aplicación...</Typography>
-          </Box>
-        </StyledPaper>
-      </StyledContainer>
+      <div className="min-h-screen pt-4 pb-4 bg-gradient-to-br from-indigo-500 to-purple-600">
+        <div className="max-w-5xl mx-auto rounded-2xl shadow-2xl bg-white/95 backdrop-blur p-6">
+          <div className="flex justify-center items-center min-h-[200px]">
+            <h6 className="text-base font-semibold">Inicializando aplicación...</h6>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <StyledContainer maxWidth="lg">
-      <StyledPaper>
+    <div className="min-h-screen pt-4 pb-4 bg-gradient-to-br from-indigo-500 to-purple-600">
+      <div className="max-w-5xl mx-auto rounded-2xl shadow-2xl bg-white/95 backdrop-blur p-6">
         {/* Header con título */}
-        <Box textAlign="center" mb={4}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ 
-            fontWeight: 'bold', 
-            color: '#333',
-            background: 'linear-gradient(45deg, #667eea, #764ba2)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>
+        <div className="text-center mb-4">
+          <h1
+            className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-2"
+          >
             Solicitud de Crédito Empresarial
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
+          </h1>
+          <p className="text-sm text-muted-foreground">
             Complete todos los pasos para enviar su solicitud
-          </Typography>
-        </Box>
+          </p>
+        </div>
 
         {/* Stepper de progreso */}
         <StyledStepper activeStep={currentStep - 1} alternativeLabel>
@@ -294,27 +274,27 @@ const MainLayout = () => {
         </StyledStepper>
 
         {/* Indicador de paso actual */}
-        <Box textAlign="center" mb={3}>
-          <Typography variant="h6" color="primary">
+        <div className="text-center mb-3">
+          <h6 className="text-base font-semibold text-primary">
             Paso {currentStep} de {steps.length}: {steps.find(s => s.id === currentStep)?.label}
-          </Typography>
-        </Box>
+          </h6>
+        </div>
 
         {/* Contenido del paso actual */}
-        <Box>
+        <div>
           {renderStepComponent()}
-        </Box>
+        </div>
 
         {/* Footer con información de sesión (solo en desarrollo) */}
         {process.env.NODE_ENV === 'development' && (
-          <Box mt={4} p={2} bgcolor="grey.100" borderRadius={1}>
-            <Typography variant="caption" color="text.secondary">
+          <div className="mt-4 p-2 bg-gray-100 rounded">
+            <p className="text-xs text-muted-foreground">
               Sesión: {sessionId} | Paso: {currentStep}/{steps.length}
-            </Typography>
-          </Box>
+            </p>
+          </div>
         )}
-      </StyledPaper>
-    </StyledContainer>
+      </div>
+    </div>
   );
 };
 

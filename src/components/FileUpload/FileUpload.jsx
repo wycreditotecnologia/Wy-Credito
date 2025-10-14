@@ -1,10 +1,12 @@
 // src/components/FileUpload/FileUpload.jsx
 import React, { useState } from 'react';
-import { Box, Button, Typography, LinearProgress, Alert, Paper, IconButton } from '@mui/material';
+import { Button, LinearProgress, IconButton } from '@mui/material';
+import { Alert, AlertDescription } from '../ui/alert';
+import { AlertTriangle } from 'lucide-react';
 import { CloudUpload as CloudUploadIcon, CheckCircle as CheckCircleIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { supabase } from '../../lib/supabaseClient'; // Asegúrate que la ruta al cliente de Supabase es correcta
+import { supabase } from '../../lib/supabaseClient';
 
-const FileUpload = ({ label, onUploadSuccess, sessionId, documentType }) => {
+const FileUpload = ({ label, onUploadSuccess, sessionId, documentType, helperText }) => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [uploadedUrl, setUploadedUrl] = useState('');
@@ -39,7 +41,7 @@ const FileUpload = ({ label, onUploadSuccess, sessionId, documentType }) => {
 
         try {
             const { error: uploadError } = await supabase.storage
-                .from('documentos') // Asegúrate que el bucket se llama 'documentos'
+                .from('documentos')
                 .upload(fileName, file);
 
             if (uploadError) throw uploadError;
@@ -50,10 +52,16 @@ const FileUpload = ({ label, onUploadSuccess, sessionId, documentType }) => {
 
             setUploadedUrl(publicUrl);
             if (onUploadSuccess) {
-                onUploadSuccess(publicUrl, documentType);
+                onUploadSuccess(publicUrl, documentType, {
+                    nombre_archivo: file.name,
+                    tamaño_archivo: file.size,
+                    tipo_mime: file.type,
+                    storage_path: fileName,
+                });
             }
         } catch (err) {
-            setError(`Fallo la subida: ${err.message}`);
+            const msg = typeof err?.message === 'string' ? err.message : 'Error de red o credenciales inválidas';
+            setError(`Fallo la subida: ${msg}`);
         } finally {
             setUploading(false);
         }
@@ -66,9 +74,14 @@ const FileUpload = ({ label, onUploadSuccess, sessionId, documentType }) => {
     };
 
     return (
-        <Paper variant="outlined" sx={{ p: 2, backgroundColor: uploadedUrl ? '#f8f9fa' : 'inherit' }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 'medium', mb: 1 }}>{label}</Typography>
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        <div className={`bg-card text-card-foreground rounded-lg border p-4 shadow-sm`}>
+        <p className="text-sm font-medium mb-1">{label}</p>
+            {error && (
+                <Alert variant="destructive" className="mb-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
 
             {!uploadedUrl ? (
                 <>
@@ -76,24 +89,27 @@ const FileUpload = ({ label, onUploadSuccess, sessionId, documentType }) => {
                         Seleccionar PDF
                         <input type="file" hidden accept=".pdf" onChange={handleFileSelect} />
                     </Button>
+                    {helperText && (
+                        <p className="text-xs text-muted-foreground mt-1">{helperText}</p>
+                    )}
                     {file && (
-                        <Box sx={{ mt: 2 }}>
-                            <Typography variant="body2">Archivo: {file.name}</Typography>
+                        <div className="mt-2">
+            <p className="text-sm">Archivo: {file.name}</p>
                             <Button onClick={handleUpload} variant="contained" sx={{ mt: 1 }} disabled={uploading}>
                                 {uploading ? 'Subiendo...' : 'Subir Archivo'}
                             </Button>
-                        </Box>
+                        </div>
                     )}
                     {uploading && <LinearProgress sx={{ mt: 2 }} />}
                 </>
             ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center', color: 'success.main' }}>
-                    <CheckCircleIcon sx={{ mr: 1 }} />
-                    <Typography variant="body2" sx={{ flexGrow: 1 }}>¡Subido con éxito!</Typography>
+                <div className="flex items-center text-success">
+                    <CheckCircleIcon className="mr-1" />
+            <p className="text-sm flex-1">¡Subido con éxito!</p>
                     <IconButton onClick={handleRemove} size="small"><DeleteIcon /></IconButton>
-                </Box>
+                </div>
             )}
-        </Paper>
+        </div>
     );
 };
 

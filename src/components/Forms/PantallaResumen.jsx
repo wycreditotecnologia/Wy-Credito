@@ -1,19 +1,11 @@
 // src/components/Forms/PantallaResumen.jsx
 import React, { useState, useEffect } from 'react';
-import { 
-    Box, 
-    Typography, 
-    Paper, 
-    List, 
-    ListItem, 
-    ListItemText, 
-    Button, 
-    Alert,
-    CircularProgress,
-    Divider,
-    Chip,
-    Grid
-} from '@mui/material';
+import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Separator } from '../ui/separator';
 import { 
     Business as BusinessIcon,
     Description as DescriptionIcon,
@@ -31,13 +23,50 @@ const PantallaResumen = ({ sessionId, onStepComplete }) => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Formateo de moneda (sin decimales, con separadores y símbolo $)
+    const formatCurrency = (value) => {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return 'N/A';
+        return `$ ${n.toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
+    };
+
+    // Evaluación de estado (completado/pendiente)
+    const isFilled = (value) => {
+        if (value === null || value === undefined) return false;
+        if (typeof value === 'number') return Number.isFinite(value) && value > 0;
+        const s = String(value).trim();
+        return s.length > 0;
+    };
+
+    const StatusBadge = ({ filled }) => (
+        <Badge
+            variant="secondary"
+            className={`${filled ? 'bg-green-600 text-white' : 'bg-red-600 text-white'} ml-2`}
+        >
+            {filled ? 'Completado' : 'Pendiente'}
+        </Badge>
+    );
+
+    // Estado global de la sección financiera
+    const isSectionComplete = (sol) => {
+        const keys = [
+            'monto_solicitado',
+            'plazo_solicitado',
+            'destino_credito',
+            'ingresos_mensuales',
+            'egresos_mensuales',
+            'patrimonio',
+        ];
+        return keys.every((k) => isFilled(sol?.[k]));
+    };
+
     useEffect(() => {
         loadSummaryData();
     }, [sessionId]);
 
     const loadSummaryData = async () => {
         try {
-            const response = await fetch('/api/orquestador', {
+            const response = await fetch('/api/orchestrator', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -67,7 +96,7 @@ const PantallaResumen = ({ sessionId, onStepComplete }) => {
         setError('');
 
         try {
-            const response = await fetch('/api/orquestador', {
+            const response = await fetch('/api/orchestrator', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -82,6 +111,12 @@ const PantallaResumen = ({ sessionId, onStepComplete }) => {
 
             if (result.success) {
                 setSuccess(`¡Solicitud enviada exitosamente! Código de seguimiento: ${result.trackingCode}`);
+                // Persistir código de seguimiento para la pantalla de éxito
+                try {
+                    if (result.trackingCode) {
+                        localStorage.setItem(`tracking_code_${sessionId}`, String(result.trackingCode));
+                    }
+                } catch {}
                 if (onStepComplete) {
                     onStepComplete();
                 }
@@ -97,17 +132,21 @@ const PantallaResumen = ({ sessionId, onStepComplete }) => {
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-                <CircularProgress size={60} />
-                <Typography variant="h6" sx={{ ml: 2 }}>Cargando resumen...</Typography>
-            </Box>
+            <div className="flex justify-center items-center min-h-[400px]">
+                <Spinner className="w-14 h-14" />
+                <p className="ml-2 text-lg font-semibold">Cargando resumen...</p>
+            </div>
         );
     }
 
     if (!summaryData) {
         return (
-            <Alert severity="error">
-                No se pudieron cargar los datos del resumen. Por favor, intente nuevamente.
+            <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                    No se pudieron cargar los datos del resumen. Por favor, intente nuevamente.
+                </AlertDescription>
             </Alert>
         );
     }
@@ -115,222 +154,275 @@ const PantallaResumen = ({ sessionId, onStepComplete }) => {
     const { solicitud, empresa, documentos, garantia } = summaryData;
 
     return (
-        <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
-            <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
+        <div className="max-w-[800px] mx-auto p-3">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary text-center mb-6">
                 Resumen de su Solicitud de Crédito
-            </Typography>
+            </h1>
             
-            <Typography variant="body1" sx={{ mb: 4, textAlign: 'center', color: 'text.secondary' }}>
+            <p className="mb-6 text-center text-muted-foreground">
                 Revise cuidadosamente toda la información antes de enviar su solicitud.
-            </Typography>
+            </p>
 
             {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                    {error}
+                <Alert variant="destructive" className="mb-6">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
 
             {success && (
-                <Alert severity="success" sx={{ mb: 3 }}>
-                    {success}
+                <Alert className="mb-6">
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertTitle>Éxito</AlertTitle>
+                    <AlertDescription>{success}</AlertDescription>
                 </Alert>
             )}
 
             {/* Información de la Solicitud */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <AccountBalanceIcon sx={{ mr: 1, color: 'primary.main' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        Información de la Solicitud
-                    </Typography>
-                </Box>
-                <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                        <Typography variant="body2" color="text.secondary">Monto Solicitado:</Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            ${solicitud?.monto_solicitado?.toLocaleString() || 'N/A'}
-                        </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <Typography variant="body2" color="text.secondary">Plazo:</Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            {solicitud?.plazo_meses || 'N/A'} meses
-                        </Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Typography variant="body2" color="text.secondary">Propósito:</Typography>
-                        <Typography variant="body1">{solicitud?.proposito || 'N/A'}</Typography>
-                    </Grid>
-                </Grid>
-            </Paper>
+            <div className="mt-12">
+                <div className="flex items-center">
+                    <AccountBalanceIcon sx={{ mr: 4, color: 'primary.main' }} />
+                    <h3 className="text-xl font-semibold border-b pb-2 mb-6">Información de la Solicitud</h3>
+                </div>
+                <div className="grid grid-cols-12 gap-2">
+                    <div className="col-span-12 sm:col-span-6">
+                        <p className="text-sm text-muted-foreground">Monto Solicitado:</p>
+                        <p className="text-lg font-semibold">
+                            {formatCurrency(solicitud?.monto_solicitado)}
+                        </p>
+                    </div>
+                    <div className="col-span-12 sm:col-span-6">
+                        <p className="text-sm text-muted-foreground">Plazo:</p>
+                        <p className="text-lg font-semibold">
+                            {solicitud?.plazo_meses ?? solicitud?.plazo_solicitado ?? 'N/A'} meses
+                        </p>
+                    </div>
+                    <div className="col-span-12">
+                        <p className="text-sm text-muted-foreground">Propósito:</p>
+                        <p className="text-base">{solicitud?.proposito || solicitud?.destino_credito || 'N/A'}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Información Financiera */}
+            <div className="mt-12">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                        <AccountBalanceIcon sx={{ mr: 4, color: 'primary.main' }} />
+                        <h3 className="text-xl font-semibold border-b pb-2 mb-6">Información Financiera</h3>
+                    </div>
+                    <Badge
+                        variant="secondary"
+                        className={`${isSectionComplete(solicitud) ? 'bg-green-600 text-white' : 'bg-yellow-500 text-white'} ml-2`}
+                    >
+                        {isSectionComplete(solicitud) ? 'Sección completa' : 'Campos pendientes'}
+                    </Badge>
+                </div>
+                <div className="grid grid-cols-12 gap-2">
+                    <div className="col-span-12 sm:col-span-6">
+                        <p
+                            className="text-sm text-muted-foreground flex items-center justify-between"
+                            title={!isFilled(solicitud?.monto_solicitado) ? 'Ingresa el monto solicitado en COP.' : undefined}
+                        >
+                            <span>Monto Solicitado</span>
+                            <StatusBadge filled={isFilled(solicitud?.monto_solicitado)} />
+                        </p>
+                        <p className="text-lg font-semibold">{formatCurrency(solicitud?.monto_solicitado)}</p>
+                    </div>
+                    <div className="col-span-12 sm:col-span-6">
+                        <p
+                            className="text-sm text-muted-foreground flex items-center justify-between"
+                            title={!isFilled(solicitud?.plazo_solicitado) ? 'Indica el plazo solicitado en meses.' : undefined}
+                        >
+                            <span>Plazo Solicitado</span>
+                            <StatusBadge filled={isFilled(solicitud?.plazo_solicitado)} />
+                        </p>
+                        <p className="text-lg font-semibold">{(solicitud?.plazo_solicitado ?? 'N/A')} meses</p>
+                    </div>
+                    <div className="col-span-12">
+                        <p
+                            className="text-sm text-muted-foreground flex items-center justify-between"
+                            title={!isFilled(solicitud?.destino_credito) ? 'Describe el destino o propósito del crédito.' : undefined}
+                        >
+                            <span>Destino del Crédito</span>
+                            <StatusBadge filled={isFilled(solicitud?.destino_credito)} />
+                        </p>
+                        <p className="text-base">{solicitud?.destino_credito || 'N/A'}</p>
+                    </div>
+                    <div className="col-span-12 sm:col-span-6">
+                        <p
+                            className="text-sm text-muted-foreground flex items-center justify-between"
+                            title={!isFilled(solicitud?.ingresos_mensuales) ? 'Registra tus ingresos mensuales en COP.' : undefined}
+                        >
+                            <span>Ingresos Mensuales</span>
+                            <StatusBadge filled={isFilled(solicitud?.ingresos_mensuales)} />
+                        </p>
+                        <p className="text-lg font-semibold">{formatCurrency(solicitud?.ingresos_mensuales)}</p>
+                    </div>
+                    <div className="col-span-12 sm:col-span-6">
+                        <p
+                            className="text-sm text-muted-foreground flex items-center justify-between"
+                            title={!isFilled(solicitud?.egresos_mensuales) ? 'Registra tus egresos mensuales en COP.' : undefined}
+                        >
+                            <span>Egresos Mensuales</span>
+                            <StatusBadge filled={isFilled(solicitud?.egresos_mensuales)} />
+                        </p>
+                        <p className="text-lg font-semibold">{formatCurrency(solicitud?.egresos_mensuales)}</p>
+                    </div>
+                    <div className="col-span-12 sm:col-span-6">
+                        <p
+                            className="text-sm text-muted-foreground flex items-center justify-between"
+                            title={!isFilled(solicitud?.patrimonio) ? 'Ingresa tu patrimonio estimado en COP.' : undefined}
+                        >
+                            <span>Patrimonio</span>
+                            <StatusBadge filled={isFilled(solicitud?.patrimonio)} />
+                        </p>
+                        <p className="text-lg font-semibold">{formatCurrency(solicitud?.patrimonio)}</p>
+                    </div>
+                </div>
+            </div>
 
             {/* Información de la Empresa */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <BusinessIcon sx={{ mr: 1, color: 'primary.main' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        Información de la Empresa
-                    </Typography>
-                </Box>
-                <List dense>
-                    <ListItem>
-                        <ListItemText 
-                            primary="Razón Social" 
-                            secondary={empresa?.razon_social || 'N/A'} 
-                        />
-                    </ListItem>
-                    <ListItem>
-                        <ListItemText 
-                            primary="NIT" 
-                            secondary={empresa?.nit || 'N/A'} 
-                        />
-                    </ListItem>
-                    <ListItem>
-                        <ListItemText 
-                            primary="Sector Económico" 
-                            secondary={empresa?.sector_economico || 'N/A'} 
-                        />
-                    </ListItem>
-                    <ListItem>
-                        <ListItemText 
-                            primary="Años de Funcionamiento" 
-                            secondary={empresa?.anos_funcionamiento || 'N/A'} 
-                        />
-                    </ListItem>
-                    <ListItem>
-                        <ListItemText 
-                            primary="Número de Empleados" 
-                            secondary={empresa?.numero_empleados || 'N/A'} 
-                        />
-                    </ListItem>
-                </List>
-            </Paper>
+            <div className="mt-12">
+                <div className="flex items-center">
+                    <BusinessIcon sx={{ mr: 4, color: 'primary.main' }} />
+                    <h3 className="text-xl font-semibold border-b pb-2 mb-6">Información de la Empresa</h3>
+                </div>
+                <ul className="space-y-2">
+                    <li className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Razón Social</span>
+                        <span className="font-medium">{empresa?.razon_social || 'N/A'}</span>
+                    </li>
+                    <li className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">NIT</span>
+                        <span className="font-medium">{empresa?.nit || 'N/A'}</span>
+                    </li>
+                    <li className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Sector Económico</span>
+                        <span className="font-medium">{empresa?.sector_economico || 'N/A'}</span>
+                    </li>
+                    <li className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Años de Funcionamiento</span>
+                        <span className="font-medium">{empresa?.anos_funcionamiento || 'N/A'}</span>
+                    </li>
+                    <li className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Número de Empleados</span>
+                        <span className="font-medium">{empresa?.numero_empleados || 'N/A'}</span>
+                    </li>
+                </ul>
+            </div>
 
             {/* Documentos Cargados */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <DescriptionIcon sx={{ mr: 1, color: 'primary.main' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        Documentos Cargados
-                    </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {documentos && documentos.length > 0 ? (
-                        documentos.map((doc, index) => (
-                            <Chip 
-                                key={index}
-                                label={doc.tipo_documento}
-                                color="success"
-                                variant="outlined"
-                            />
-                        ))
-                    ) : (
-                        <Typography color="text.secondary">No hay documentos cargados</Typography>
-                    )}
-                </Box>
-            </Paper>
+            <div className="mt-12">
+                <div className="flex items-center">
+                    <DescriptionIcon sx={{ mr: 4, color: 'primary.main' }} />
+                    <h3 className="text-xl font-semibold border-b pb-2 mb-6">Documentos Cargados</h3>
+                </div>
+                {documentos && documentos.length > 0 ? (
+                    <div className="grid grid-cols-12 gap-2">
+                        {documentos.map((doc, index) => (
+                            <div key={index} className="col-span-12 sm:col-span-6">
+                                <p className="text-sm text-muted-foreground">{doc.tipo_documento || 'Documento'}</p>
+                                <Badge variant="secondary" className="mt-1">
+                                    {doc.nombre_archivo || doc.tipo_documento || 'Archivo subido'}
+                                </Badge>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-sm text-muted-foreground">No hay documentos cargados</p>
+                )}
+                
+            </div>
 
             {/* Referencias */}
             {(empresa?.nombre_referencia_1 || empresa?.nombre_referencia_2) && (
-                <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <PeopleIcon sx={{ mr: 1, color: 'primary.main' }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            Referencias Comerciales
-                        </Typography>
-                    </Box>
-                    <Grid container spacing={2}>
+                <div className="mt-12">
+                    <div className="flex items-center">
+                    <PeopleIcon sx={{ mr: 4, color: 'primary.main' }} />
+                        <h3 className="text-xl font-semibold border-b pb-2 mb-6">Referencias Comerciales</h3>
+                    </div>
+                    <div className="grid grid-cols-12 gap-2">
                         {empresa?.nombre_referencia_1 && (
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="body2" color="text.secondary">Referencia 1:</Typography>
-                                <Typography variant="body1">{empresa.nombre_referencia_1}</Typography>
-                                <Typography variant="body2">{empresa.telefono_referencia_1}</Typography>
-                            </Grid>
+                            <div className="col-span-12 sm:col-span-6">
+                                <p className="text-sm text-muted-foreground">Referencia 1:</p>
+                                <p className="text-base">{empresa.nombre_referencia_1}</p>
+                                <p className="text-sm">{empresa.telefono_referencia_1}</p>
+                            </div>
                         )}
                         {empresa?.nombre_referencia_2 && (
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="body2" color="text.secondary">Referencia 2:</Typography>
-                                <Typography variant="body1">{empresa.nombre_referencia_2}</Typography>
-                                <Typography variant="body2">{empresa.telefono_referencia_2}</Typography>
-                            </Grid>
+                            <div className="col-span-12 sm:col-span-6">
+                                <p className="text-sm text-muted-foreground">Referencia 2:</p>
+                                <p className="text-base">{empresa.nombre_referencia_2}</p>
+                                <p className="text-sm">{empresa.telefono_referencia_2}</p>
+                            </div>
                         )}
-                    </Grid>
-                </Paper>
+                    </div>
+                </div>
             )}
 
             {/* Garantía */}
             {garantia && (
-                <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <SecurityIcon sx={{ mr: 1, color: 'primary.main' }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            Garantía Mobiliaria
-                        </Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">Descripción:</Typography>
-                    <Typography variant="body1" sx={{ mb: 2 }}>{garantia.descripcion}</Typography>
-                    <Typography variant="body2" color="text.secondary">Valor Estimado:</Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                <div className="mt-12">
+                    <div className="flex items-center">
+                    <SecurityIcon sx={{ mr: 4, color: 'primary.main' }} />
+                        <h3 className="text-xl font-semibold border-b pb-2 mb-6">Garantía Mobiliaria</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Descripción:</p>
+                    <p className="text-base mb-6">{garantia.descripcion}</p>
+                    <p className="text-sm text-muted-foreground">Valor Estimado:</p>
+                    <p className="text-lg font-semibold">
                         ${garantia.valor_estimado?.toLocaleString() || 'N/A'}
-                    </Typography>
-                </Paper>
+                    </p>
+                </div>
             )}
 
             {/* Declaraciones */}
-            <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <GavelIcon sx={{ mr: 1, color: 'primary.main' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        Declaraciones Aceptadas
-                    </Typography>
-                </Box>
-                <List dense>
-                    <ListItem>
-                        <ListItemText 
-                            primary="✓ Acepto que el crédito será destinado únicamente para fines productivos"
-                        />
-                    </ListItem>
-                    <ListItem>
-                        <ListItemText 
-                            primary="✓ Declaro que el crédito no será utilizado para gastos personales"
-                        />
-                    </ListItem>
-                    <ListItem>
-                        <ListItemText 
-                            primary="✓ Autorizo el tratamiento de mis datos personales según la política de habeas data"
-                        />
-                    </ListItem>
-                </List>
-            </Paper>
+            <div className="mt-12">
+                <div className="flex items-center">
+                    <GavelIcon sx={{ mr: 4, color: 'primary.main' }} />
+                    <h3 className="text-xl font-semibold border-b pb-2 mb-6">Declaraciones Aceptadas</h3>
+                </div>
+                <ul className="list-disc pl-5 space-y-1">
+                    <li>✓ Acepto que el crédito será destinado únicamente para fines productivos</li>
+                    <li>✓ Declaro que el crédito no será utilizado para gastos personales</li>
+                    <li>✓ Autorizo el tratamiento de mis datos personales según la política de habeas data</li>
+                </ul>
+                </div>
 
-            <Divider sx={{ mb: 4 }} />
+            <Separator className="my-8" />
 
             {/* Botón de Envío Final */}
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <div className="flex justify-center">
                 <Button
                     onClick={handleFinalSubmission}
-                    variant="contained"
-                    size="large"
+                    size="lg"
                     disabled={submitting || success}
-                    startIcon={submitting ? <CircularProgress size={20} /> : <SendIcon />}
-                    sx={{ 
-                        minWidth: 300,
-                        py: 2,
-                        fontSize: '1.2rem',
-                        fontWeight: 'bold',
-                        backgroundColor: success ? 'success.main' : 'primary.main'
-                    }}
+                    className={`min-w-[300px] py-2 text-lg font-bold ${success ? 'bg-green-600 text-white hover:bg-green-600/90' : ''}`}
                 >
-                    {submitting ? 'Enviando Solicitud...' : success ? 'Solicitud Enviada' : 'Confirmar y Enviar Solicitud'}
+                    {submitting ? (
+                        <span className="inline-flex items-center">
+                            <Spinner className="mr-2 w-5 h-5" />
+                            Enviando Solicitud...
+                        </span>
+                    ) : success ? (
+                        'Solicitud Enviada'
+                    ) : (
+                        <span className="inline-flex items-center">
+                            <SendIcon className="mr-2" />
+                            Confirmar y Enviar Solicitud
+                        </span>
+                    )}
                 </Button>
-            </Box>
+            </div>
 
             {success && (
-                <Typography variant="body2" sx={{ textAlign: 'center', mt: 2, color: 'text.secondary' }}>
+                <p className="text-sm text-center mt-6 text-muted-foreground">
                     Recibirá un correo de confirmación con los detalles de su solicitud.
-                </Typography>
+                </p>
             )}
-        </Box>
+        </div>
     );
 };
 

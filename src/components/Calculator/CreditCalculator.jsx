@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import {
-  Card, CardContent, Typography, Slider, Box, Button, Grid, Divider,
-} from '@mui/material';
+import { Slider, Button } from '@mui/material';
+import { Separator } from '@/components/ui/separator';
 import { TrendingUp } from '@mui/icons-material';
 
 const formatCurrency = (value) =>
@@ -27,32 +26,30 @@ const CreditCalculator = ({ onStartApplication }) => {
   };
 
   return (
-    <Grid container justifyContent="center" alignItems="center" style={{ minHeight: '70vh' }}>
-      <Grid item xs={12} sm={10} md={8} lg={6}>
-        <Card>
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h2" component="h1" gutterBottom textAlign="center">
-              Simula tu crédito empresarial
-            </Typography>
-            <Typography variant="body1" color="text.secondary" textAlign="center" mb={4}>
+    <div className="grid place-items-center min-h-[70vh]">
+      <div className="col-span-12 sm:col-span-10 md:col-span-8 lg:col-span-6 w-full">
+        <div className="bg-card text-card-foreground rounded-lg border shadow-sm">
+          <div className="p-4 sm:p-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-center mb-2">Simula tu crédito empresarial</h1>
+            <p className="text-sm text-muted-foreground text-center mb-4">
               Proyecta el crecimiento de tu negocio. Ajusta el monto y el plazo para ver una cuota estimada.
-            </Typography>
-            <Box mb={4}>
-              <Typography gutterBottom fontWeight="medium">Monto a solicitar</Typography>
-              <Typography variant="h4" color="primary.dark" fontWeight="bold">{formatCurrency(monto)}</Typography>
+            </p>
+            <div className="mb-4">
+              <p className="text-sm font-medium mb-1">Monto a solicitar</p>
+              <p className="text-2xl font-bold text-primary">{formatCurrency(monto)}</p>
               <Slider value={monto} min={5000000} max={500000000} step={1000000} onChange={(_, newValue) => setMonto(newValue)} />
-            </Box>
-            <Box mb={4}>
-              <Typography gutterBottom fontWeight="medium">Plazo</Typography>
-              <Typography variant="h4" color="primary.dark" fontWeight="bold">{plazo} meses</Typography>
+            </div>
+            <div className="mb-4">
+              <p className="text-sm font-medium mb-1">Plazo</p>
+              <p className="text-2xl font-bold text-primary">{plazo} meses</p>
               <Slider value={plazo} min={12} max={60} step={1} onChange={(_, newValue) => setPlazo(newValue)} />
-            </Box>
-            <Divider sx={{ my: 3 }} />
-            <Box textAlign="center">
-                <Typography variant="h6" color="text.secondary">Cuota mensual estimada</Typography>
-                <Typography variant="h3" fontWeight="bold" color="primary.main" mb={3}>
+            </div>
+            <Separator className="my-3" />
+            <div className="text-center">
+                <h6 className="text-base font-semibold text-muted-foreground">Cuota mensual estimada</h6>
+                <p className="text-3xl font-bold text-primary mb-3">
                     {formatCurrency(cuotaMensual)}
-                </Typography>
+                </p>
                 <Button 
                     variant="contained" 
                     size="large" 
@@ -61,14 +58,14 @@ const CreditCalculator = ({ onStartApplication }) => {
                 >
                     Iniciar mi Solicitud
                 </Button>
-                 <Typography variant="caption" display="block" color="text.secondary" mt={2}>
+                 <p className="text-xs text-muted-foreground mt-2">
                     Este cálculo no constituye una oferta formal y está sujeto a estudio de crédito.
-                </Typography>
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
+                </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

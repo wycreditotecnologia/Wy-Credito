@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <defs>
+    <style>
+      .box { fill: #ffffff; stroke: #1f2937; stroke-width: 2; rx: 8; }
+      .header { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; rx: 8; }
+      .card { fill: #ffffff; stroke: #e5e7eb; stroke-width: 2; rx: 8; }
+      .text { font-family: Arial, Helvetica, sans-serif; fill: #111827; }
+      .muted { fill: #6b7280; }
+      .label { font-size: 16px; font-weight: 700; }
+      .small { font-size: 13px; }
+      .arrow { stroke: #374151; stroke-width: 2; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#374151" />
+    </marker>
+  </defs>
+
+  <!-- Título -->
+  <text x="600" y="40" text-anchor="middle" class="text label">Estructura de la Solicitud (Pantalla Completa)</text>
+
+  <!-- App.jsx (Routes) -->
+  <rect x="60" y="70" width="1080" height="110" class="box" />
+  <text x="80" y="95" class="text label">App.jsx (Routes)</text>
+  <text x="80" y="120" class="text small muted">"/solicitud" → MainLayout · 
+"/solicitud/:sessionId" → MainLayout · 
+"/" → LandingPage · 
+"/politica-de-privacidad" · 
+"/terminos-y-condiciones" · 
+"/politica-de-cookies"</text>
+
+  <!-- Flecha hacia MainLayout -->
+  <line x1="600" y1="180" x2="600" y2="220" class="arrow" />
+
+  <!-- MainLayout -->
+  <rect x="140" y="220" width="920" height="80" class="box" />
+  <text x="160" y="250" class="text label">MainLayout.jsx</text>
+  <text x="160" y="270" class="text small muted">Crea/valida sessionId y renderiza &lt;ApplicationView sessionId={...} /&gt;</text>
+
+  <!-- Flecha hacia ApplicationView -->
+  <line x1="600" y1="300" x2="600" y2="340" class="arrow" />
+
+  <!-- ApplicationView (Root Visual) -->
+  <rect x="60" y="340" width="1080" height="520" class="box" />
+  <text x="80" y="365" class="text label">ApplicationView.jsx</text>
+  <text x="80" y="385" class="text small muted">div.min-h-screen w-full bg-white · Contenedor de página 90% ancho</text>
+
+  <!-- Card principal -->
+  <rect x="90" y="400" width="1020" height="440" class="card" />
+  <text x="110" y="425" class="text label">Tarjeta principal</text>
+  <text x="110" y="445" class="text small muted">Agrupa encabezado, formulario y resumen</text>
+
+  <!-- Encabezado sticky -->
+  <rect x="120" y="460" width="960" height="110" class="header" />
+  <text x="140" y="485" class="text label">Encabezado (sticky)</text>
+  <text x="140" y="505" class="text small muted">bg-white · border-gray-200 · título, subtítulo y Stepper</text>
+  <text x="140" y="525" class="text small">StyledStepper: etiquetas legibles sobre fondo blanco</text>
+
+  <!-- Contenido grid -->
+  <rect x="120" y="590" width="960" height="210" class="card" />
+  <text x="140" y="615" class="text label">Contenido</text>
+  <text x="140" y="635" class="text small muted">grid grid-cols-1 · px-8 py-12</text>
+
+  <!-- Formulario (w-full) -->
+  <rect x="150" y="660" width="580" height="110" class="box" />
+  <text x="170" y="685" class="text label">Formulario paso actual</text>
+  <text x="170" y="705" class="text small muted">w-full · renderStepComponent()</text>
+  <text x="170" y="725" class="text small">Componentes: Empresa, Documentación, Financiero, Referencias, Aceptación, Garantía, Resumen</text>
+
+  <!-- Resumen dinámico -->
+  <rect x="760" y="660" width="300" height="110" class="box" />
+  <text x="780" y="685" class="text label">ResumenDinamico</text>
+  <text x="780" y="705" class="text small muted">mt-8 · sticky top-40 · text-sm</text>
+  <text x="780" y="725" class="text small">Muestra datos capturados (Razón Social, NIT, documentos, etc.)</text>
+
+  <!-- Footer dev -->
+  <rect x="120" y="820" width="960" height="40" class="header" />
+  <text x="140" y="845" class="text small muted">Footer (solo desarrollo): sesión y paso actual</text>
+
+  <!-- Notas de formularios (patrón interno) -->
+  <text x="90" y="900" class="text small">Patrón de formularios: tarjetas por sección, h3 con border-b, Separator para ritmo, grid responsivo, botones de acción. Consentimientos con enlaces a “/politica-de-privacidad”.</text>
+</svg>

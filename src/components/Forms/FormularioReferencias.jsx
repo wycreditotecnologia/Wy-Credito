@@ -1,74 +1,97 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  CircularProgress,
-  Paper,
-  Grid
-} from '@mui/material';
+import React, { useState, useRef, useEffect } from 'react';
+import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
+import { AlertTriangle } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 
-const FormularioReferencias = ({ sessionId, onStepComplete }) => {
-  // Estado para los campos del formulario
-  const [formData, setFormData] = useState({
-    nombre_referencia_1: '',
-    telefono_referencia_1: '',
-    nombre_referencia_2: '',
-    telefono_referencia_2: ''
-  });
+const FormularioReferencias = ({ sessionId, onStepComplete, onProgressUpdate }) => {
+  // Estado: referencias como array de objetos (JSONB-ready)
+  const [referencias, setReferencias] = useState([
+    { nombre: '', contacto: '' },
+    { nombre: '', contacto: '' }
+  ]);
+  const [showSecondRef, setShowSecondRef] = useState(false);
 
   // Estados para manejo de UI
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  // Función para manejar cambios en los inputs
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  // Refs para navegación por teclado
+  const ref1NombreRef = useRef(null);
+  const ref1ContactoRef = useRef(null);
+  const ref2NombreRef = useRef(null);
+  const ref2ContactoRef = useRef(null);
+  const inputRefs = [ref1NombreRef, ref1ContactoRef, ref2NombreRef, ref2ContactoRef];
 
-    // Limpiar error del campo cuando el usuario empiece a escribir
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
+  useEffect(() => {
+    // Enfocar primer campo al montar
+    ref1NombreRef.current?.focus();
+  }, []);
+
+  // Reportar progreso del paso al montar
+  useEffect(() => {
+    if (typeof onProgressUpdate === 'function') {
+      // 2 referencias (nombre + contacto) => 4 interacciones
+      onProgressUpdate({ currentQuestion: 1, totalQuestions: 4 });
+    }
+  }, [onProgressUpdate]);
+
+  // Manejo de cambios por referencia e input
+  const handleRefChange = (index, field, value) => {
+    setReferencias(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+
+    // Limpiar error del campo específico
+    const key = `ref_${index}_${field}`;
+    if (errors[key]) {
+      setErrors(prev => ({ ...prev, [key]: '' }));
     }
   };
 
-  // Validación de formato de teléfono (números, espacios, guiones, paréntesis)
-  const validatePhone = (phone) => {
-    const phoneRegex = /^[\d\s\-\(\)\+]{7,15}$/;
-    return phoneRegex.test(phone.trim());
+  // Validación de contacto: email válido o teléfono con ≥7 dígitos
+  const isValidContact = (value) => {
+    const v = String(value || '').trim();
+    if (!v) return false;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const digits = v.replace(/\D/g, '');
+    const looksLikeEmail = emailRegex.test(v);
+    const looksLikePhone = digits.length >= 7;
+    return looksLikeEmail || looksLikePhone;
   };
 
   // Función de validación
   const validateForm = () => {
     const newErrors = {};
 
-    // Validar campos requeridos
-    if (!formData.nombre_referencia_1.trim()) {
-      newErrors.nombre_referencia_1 = 'El nombre de la primera referencia es requerido';
+    // Ref 1: obligatorio nombre y contacto válido
+    const r1 = referencias[0];
+    if (!String(r1.nombre || '').trim()) {
+      newErrors.ref_0_nombre = 'El nombre de la referencia 1 es obligatorio';
+    }
+    if (!String(r1.contacto || '').trim()) {
+      newErrors.ref_0_contacto = 'El contacto de la referencia 1 es obligatorio';
+    } else if (!isValidContact(r1.contacto)) {
+      newErrors.ref_0_contacto = 'Ingrese un email válido o un teléfono (≥7 dígitos)';
     }
 
-    if (!formData.telefono_referencia_1.trim()) {
-      newErrors.telefono_referencia_1 = 'El teléfono de la primera referencia es requerido';
-    } else if (!validatePhone(formData.telefono_referencia_1)) {
-      newErrors.telefono_referencia_1 = 'Formato de teléfono inválido';
-    }
-
-    if (!formData.nombre_referencia_2.trim()) {
-      newErrors.nombre_referencia_2 = 'El nombre de la segunda referencia es requerido';
-    }
-
-    if (!formData.telefono_referencia_2.trim()) {
-      newErrors.telefono_referencia_2 = 'El teléfono de la segunda referencia es requerido';
-    } else if (!validatePhone(formData.telefono_referencia_2)) {
-      newErrors.telefono_referencia_2 = 'Formato de teléfono inválido';
+    // Ref 2: opcional, valida solo si el usuario llenó alguno
+    const r2 = referencias[1];
+    const r2HasAny = Boolean(String(r2.nombre || '').trim() || String(r2.contacto || '').trim());
+    if (showSecondRef && r2HasAny) {
+      if (!String(r2.nombre || '').trim()) {
+        newErrors.ref_1_nombre = 'El nombre de la referencia 2 es obligatorio si la añade';
+      }
+      if (!String(r2.contacto || '').trim()) {
+        newErrors.ref_1_contacto = 'El contacto de la referencia 2 es obligatorio si la añade';
+      } else if (!isValidContact(r2.contacto)) {
+        newErrors.ref_1_contacto = 'Ingrese un email válido o un teléfono (≥7 dígitos)';
+      }
     }
 
     setErrors(newErrors);
@@ -77,7 +100,7 @@ const FormularioReferencias = ({ sessionId, onStepComplete }) => {
 
   // Función para enviar el formulario
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
     
     if (!validateForm()) {
       return;
@@ -87,28 +110,30 @@ const FormularioReferencias = ({ sessionId, onStepComplete }) => {
     setSubmitError('');
 
     try {
-      // Preparar payload para el orquestador
-      const payload = {
-        action: 'submit_form_step',
-        sessionId: sessionId,
-        step: 4,
-        data: {
-          nombre_referencia_1: formData.nombre_referencia_1.trim(),
-          telefono_referencia_1: formData.telefono_referencia_1.trim(),
-          nombre_referencia_2: formData.nombre_referencia_2.trim(),
-          telefono_referencia_2: formData.telefono_referencia_2.trim()
-        }
-      };
+      // Construir array de referencias completas para JSONB
+      const referenciasPayload = referencias
+        .filter(r => String(r.nombre || '').trim() && String(r.contacto || '').trim() && isValidContact(r.contacto))
+        .map(r => ({ nombre: r.nombre.trim(), contacto: r.contacto.trim() }));
 
-      console.log('Enviando datos de referencias:', payload);
+      // Normalizar a campos mapeados por el orquestador (nombre/telefono referencia 1 y 2)
+      const stepData = {};
+      if (referenciasPayload[0]) {
+        stepData.nombre_referencia_1 = referenciasPayload[0].nombre;
+        stepData.telefono_referencia_1 = referenciasPayload[0].contacto;
+      }
+      if (referenciasPayload[1]) {
+        stepData.nombre_referencia_2 = referenciasPayload[1].nombre;
+        stepData.telefono_referencia_2 = referenciasPayload[1].contacto;
+      }
 
-      // Enviar al orquestador
       const response = await fetch('/api/orchestrator', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'submit_form_step',
+          sessionId,
+          payload: { currentStep: 4, stepData },
+        })
       });
 
       if (!response.ok) {
@@ -131,114 +156,161 @@ const FormularioReferencias = ({ sessionId, onStepComplete }) => {
     }
   };
 
+  // Gestor Enter con salto dinámico a próximo campo visible
+  const handleKeyDown = (event, currentIndex) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      // Buscar el siguiente ref montado
+      for (let i = currentIndex + 1; i < inputRefs.length; i++) {
+        const next = inputRefs[i]?.current;
+        if (next) {
+          next.focus();
+          return;
+        }
+      }
+      // Si no hay siguiente visible, enviar
+      handleSubmit();
+    }
+  };
+
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom align="center">
-          Paso 4: Referencias Comerciales
-        </Typography>
-        
-        <Typography variant="body1" color="text.secondary" paragraph align="center">
+    <div className="max-w-[800px] mx-auto p-3">
+      <div className="mt-12">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-6">Paso 4: Referencias Comerciales</h1>
+        <p className="text-muted-foreground text-center mb-6">
           Proporcione información de dos referencias comerciales que puedan dar testimonio 
           de la actividad y reputación de su empresa.
-        </Typography>
+        </p>
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+        <form onSubmit={handleSubmit} className="mt-6">
           {/* Referencia 1 */}
-          <Typography variant="h6" gutterBottom sx={{ mt: 3, mb: 2 }}>
-            Referencia Comercial #1
-          </Typography>
+        <h3 className="text-xl font-semibold border-b pb-2 mt-12 mb-6">Referencia Comercial #1</h3>
           
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Nombre Completo - Referencia 1"
-                value={formData.nombre_referencia_1}
-                onChange={(e) => handleInputChange('nombre_referencia_1', e.target.value)}
-                error={!!errors.nombre_referencia_1}
-                helperText={errors.nombre_referencia_1}
-                required
-                placeholder="Ej: Juan Carlos Pérez"
-              />
-            </Grid>
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="ref1_nombre">Nombre Completo - Referencia 1</Label>
+                <Input
+                  id="ref1_nombre"
+                  value={referencias[0].nombre}
+                  onChange={(e) => handleRefChange(0, 'nombre', e.target.value)}
+                  placeholder="Ej: Juan Carlos Pérez"
+                  ref={ref1NombreRef}
+                  onKeyDown={(e) => handleKeyDown(e, 0)}
+                />
+                {errors.ref_0_nombre && (
+                  <p className="text-sm text-destructive mt-1">{errors.ref_0_nombre}</p>
+                )}
+              </div>
+            </div>
             
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Teléfono - Referencia 1"
-                value={formData.telefono_referencia_1}
-                onChange={(e) => handleInputChange('telefono_referencia_1', e.target.value)}
-                error={!!errors.telefono_referencia_1}
-                helperText={errors.telefono_referencia_1}
-                required
-                placeholder="Ej: 300 123 4567"
-              />
-            </Grid>
-          </Grid>
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="ref1_contacto">Teléfono o Email - Referencia 1</Label>
+                <Input
+                  id="ref1_contacto"
+                  value={referencias[0].contacto}
+                  onChange={(e) => handleRefChange(0, 'contacto', e.target.value)}
+                  placeholder="Ej: 300 123 4567 o correo@ejemplo.com"
+                  ref={ref1ContactoRef}
+                  onKeyDown={(e) => handleKeyDown(e, 1)}
+                />
+                {errors.ref_0_contacto && (
+                  <p className="text-sm text-destructive mt-1">{errors.ref_0_contacto}</p>
+                )}
+              </div>
+            </div>
+          </div>
 
-          {/* Referencia 2 */}
-          <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
-            Referencia Comercial #2
-          </Typography>
-          
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Nombre Completo - Referencia 2"
-                value={formData.nombre_referencia_2}
-                onChange={(e) => handleInputChange('nombre_referencia_2', e.target.value)}
-                error={!!errors.nombre_referencia_2}
-                helperText={errors.nombre_referencia_2}
-                required
-                placeholder="Ej: María Elena Rodríguez"
-              />
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Teléfono - Referencia 2"
-                value={formData.telefono_referencia_2}
-                onChange={(e) => handleInputChange('telefono_referencia_2', e.target.value)}
-                error={!!errors.telefono_referencia_2}
-                helperText={errors.telefono_referencia_2}
-                required
-                placeholder="Ej: 301 987 6543"
-              />
-            </Grid>
-          </Grid>
+          {/* Botón para añadir otra referencia (opcional) */}
+          {!showSecondRef && (
+            <div className="mt-4">
+              <Button type="button" variant="outline" onClick={() => setShowSecondRef(true)}>
+                Añadir otra referencia
+              </Button>
+            </div>
+          )}
+
+          {/* Referencia 2 opcional */}
+          {showSecondRef && (
+            <>
+              <div className="flex items-center justify-between mt-12">
+                <h3 className="text-xl font-semibold border-b pb-2 mb-6">Referencia Comercial #2 (opcional)</h3>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setReferencias(prev => [{ ...prev[0] }, { nombre: '', contacto: '' }]);
+                    setErrors(prev => ({ ...prev, ref_1_nombre: '', ref_1_contacto: '' }));
+                    setShowSecondRef(false);
+                  }}
+                >
+                  Quitar
+                </Button>
+              </div>
+              <div className="grid grid-cols-12 gap-6">
+                <div className="col-span-12 md:col-span-6">
+                  <div className="mb-6">
+                    <Label htmlFor="ref2_nombre">Nombre Completo - Referencia 2</Label>
+                    <Input
+                      id="ref2_nombre"
+                      value={referencias[1].nombre}
+                      onChange={(e) => handleRefChange(1, 'nombre', e.target.value)}
+                      placeholder="Ej: María Elena Rodríguez"
+                      ref={ref2NombreRef}
+                      onKeyDown={(e) => handleKeyDown(e, 2)}
+                    />
+                    {errors.ref_1_nombre && (
+                      <p className="text-sm text-destructive mt-1">{errors.ref_1_nombre}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="col-span-12 md:col-span-6">
+                  <div className="mb-6">
+                    <Label htmlFor="ref2_contacto">Teléfono o Email - Referencia 2</Label>
+                    <Input
+                      id="ref2_contacto"
+                      value={referencias[1].contacto}
+                      onChange={(e) => handleRefChange(1, 'contacto', e.target.value)}
+                      placeholder="Ej: 301 987 6543 o correo@ejemplo.com"
+                      ref={ref2ContactoRef}
+                      onKeyDown={(e) => handleKeyDown(e, 3)}
+                    />
+                    {errors.ref_1_contacto && (
+                      <p className="text-sm text-destructive mt-1">{errors.ref_1_contacto}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Error de envío */}
           {submitError && (
-            <Alert severity="error" sx={{ mt: 3 }}>
-              {submitError}
+            <Alert variant="destructive" className="mb-6">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{submitError}</AlertDescription>
             </Alert>
           )}
 
           {/* Botón de envío */}
-          <Box sx={{ mt: 4, textAlign: 'center' }}>
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-              disabled={isSubmitting}
-              sx={{ minWidth: 200 }}
-            >
+          <div className="mt-12 text-center">
+            <Button type="submit" disabled={isSubmitting} className="bg-black text-white hover:bg-black/80">
               {isSubmitting ? (
                 <>
-                  <CircularProgress size={20} sx={{ mr: 1 }} />
+                  <Spinner className="mr-2 w-5 h-5" />
                   Enviando...
                 </>
               ) : (
-                'Continuar al Siguiente Paso'
+                'Guardar y Continuar'
               )}
             </Button>
-          </Box>
-        </Box>
-      </Paper>
-    </Box>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 

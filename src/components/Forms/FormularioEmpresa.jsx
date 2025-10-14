@@ -1,22 +1,13 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormControlLabel,
-  Checkbox,
-  Button,
-  Grid,
-  Paper,
-  Typography,
-  Divider,
-  Alert,
-  InputAdornment,
-  CircularProgress,
-} from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
+import { AlertTriangle } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Checkbox } from '../ui/checkbox';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../ui/select';
 import {
   Business as BusinessIcon,
   Language as WebIcon,
@@ -26,12 +17,16 @@ import {
   Twitter as TwitterIcon,
 } from '@mui/icons-material';
 
-const FormularioEmpresa = ({ onStepComplete, sessionId }) => {
+const FormularioEmpresa = ({ onStepComplete, sessionId, registerStepActions, hideLocalActions, onProgressUpdate }) => {
   const [formData, setFormData] = useState({
     nit: '',
     razonSocial: '',
     tipoEmpresa: '',
-    paginaWeb: '',
+    sitioWeb: '',
+    telefonoEmpresa: '',
+    direccionEmpresa: '',
+    ciudad: '',
+    departamento: '',
     redesSociales: {
       facebook: '',
       instagram: '',
@@ -43,8 +38,47 @@ const FormularioEmpresa = ({ onStepComplete, sessionId }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [mostrarRedes, setMostrarRedes] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [questionIndex, setQuestionIndex] = useState(0);
+
+  // Refs para navegación acelerada por teclado
+  const nitRef = useRef(null);
+  const razonSocialRef = useRef(null);
+  const tipoEmpresaRef = useRef(null); // SelectTrigger
+  const telefonoRef = useRef(null);
+  const direccionRef = useRef(null);
+  const ciudadRef = useRef(null);
+  const departamentoRef = useRef(null);
+  const sitioWebRef = useRef(null);
+  const facebookRef = useRef(null);
+  const instagramRef = useRef(null);
+  const linkedinRef = useRef(null);
+  const twitterRef = useRef(null);
+  const autorizacionConsultaRef = useRef(null);
+  const habeasDataRef = useRef(null);
+
+  const inputRefs = [
+    nitRef,
+    razonSocialRef,
+    tipoEmpresaRef,
+    telefonoRef,
+    direccionRef,
+    ciudadRef,
+    departamentoRef,
+    sitioWebRef,
+    facebookRef,
+    instagramRef,
+    linkedinRef,
+    twitterRef,
+    autorizacionConsultaRef,
+    habeasDataRef,
+  ];
+
+  useEffect(() => {
+    nitRef.current?.focus();
+  }, []);
 
   // Opciones para tipo de empresa
   const tiposEmpresa = [
@@ -87,11 +121,11 @@ const FormularioEmpresa = ({ onStepComplete, sessionId }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    // Validación NIT
+    // Validación NIT: 9-10 dígitos + guion + dígito verificador (ej: 9016859886-0)
     if (!formData.nit.trim()) {
       newErrors.nit = 'El NIT es obligatorio';
-    } else if (!/^\d{9,11}$/.test(formData.nit.replace(/[.-]/g, ''))) {
-      newErrors.nit = 'El NIT debe tener entre 9 y 11 dígitos';
+    } else if (!/^\d{9,10}-\d$/.test(formData.nit.trim())) {
+      newErrors.nit = 'Formato inválido. Use el guion y dígito verificador (ej: 9016859886-0)';
     }
 
     // Validación Razón Social
@@ -106,27 +140,118 @@ const FormularioEmpresa = ({ onStepComplete, sessionId }) => {
       newErrors.tipoEmpresa = 'Debe seleccionar el tipo de empresa';
     }
 
-    // Validación Página Web (opcional pero si se llena debe ser válida)
-    if (formData.paginaWeb && !/^https?:\/\/.+\..+/.test(formData.paginaWeb)) {
-      newErrors.paginaWeb = 'Ingrese una URL válida (ej: https://www.ejemplo.com)';
+    // Validación Sitio Web (opcional pero si se llena debe ser válida)
+    if (formData.sitioWeb && !/^https?:\/\/.+/.test(formData.sitioWeb)) {
+      newErrors.sitioWeb = 'Ingrese una URL válida (ej: https://www.ejemplo.com)';
     }
 
-    // Validación Autorizaciones
-    if (!formData.autorizacionConsulta) {
-      newErrors.autorizacionConsulta = 'Debe autorizar la consulta en centrales de riesgo';
+    // Teléfono: al menos 7 dígitos
+    if (!formData.telefonoEmpresa.trim()) {
+      newErrors.telefonoEmpresa = 'El teléfono de la empresa es obligatorio';
+    } else if (!/^\d{7,}$/.test(formData.telefonoEmpresa.replace(/\D/g, ''))) {
+      newErrors.telefonoEmpresa = 'El teléfono debe tener al menos 7 dígitos';
     }
 
-    if (!formData.habeasData) {
-      newErrors.habeasData = 'Debe aceptar el tratamiento de datos personales';
+    // Dirección, ciudad y departamento (requeridos)
+    if (!formData.direccionEmpresa.trim()) {
+      newErrors.direccionEmpresa = 'La dirección es obligatoria';
+    }
+    if (!formData.ciudad.trim()) {
+      newErrors.ciudad = 'La ciudad es obligatoria';
+    }
+    if (!formData.departamento.trim()) {
+      newErrors.departamento = 'El departamento es obligatorio';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  // Validación específica por pregunta para el flujo tipo Typeform
+  const validateCurrentQuestion = () => {
+    const newErrors = {};
+    switch (questionIndex) {
+      case 0: {
+        if (!formData.razonSocial.trim()) {
+          newErrors.razonSocial = 'La razón social es obligatoria';
+        } else if (formData.razonSocial.trim().length < 3) {
+          newErrors.razonSocial = 'La razón social debe tener al menos 3 caracteres';
+        }
+        break;
+      }
+      case 1: {
+        if (!formData.nit.trim()) {
+          newErrors.nit = 'El NIT es obligatorio';
+        } else {
+          if (!/^\d{9,10}-\d$/.test(formData.nit.trim())) {
+            newErrors.nit = 'Formato inválido. Use el guion y dígito verificador (ej: 9016859886-0)';
+          }
+        }
+        break;
+      }
+      case 2: {
+        if (!formData.tipoEmpresa) {
+          newErrors.tipoEmpresa = 'Debe seleccionar el tipo de empresa';
+        }
+        break;
+      }
+      case 3: {
+        if (formData.sitioWeb && !/^https?:\/\/.+/.test(formData.sitioWeb)) {
+          newErrors.sitioWeb = 'Ingrese una URL válida (ej: https://www.ejemplo.com)';
+        }
+        break;
+      }
+      default:
+        break;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const totalQuestions = 5;
+
+  const handleNextQuestion = async () => {
+    setSubmitError('');
+    const ok = validateCurrentQuestion();
+    if (!ok) return;
+
+    if (questionIndex < totalQuestions - 1) {
+      setQuestionIndex((idx) => idx + 1);
+    } else {
+      // Última pregunta: validar globalmente y enviar
+      await submitData();
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    setSubmitError('');
+    setErrors({});
+    setQuestionIndex((idx) => Math.max(0, idx - 1));
+  };
+
+  // Navegación por Enter: avanza al siguiente foco o envía al final
+  const handleKeyDown = (event, currentIndex) => {
+    if (event.key === 'Enter') {
+      // En SelectTrigger de tipo empresa, permitir Enter para abrir si está vacío
+      if (currentIndex === 2 && !String(formData.tipoEmpresa || '').trim()) {
+        return;
+      }
+      event.preventDefault();
+      for (let i = currentIndex + 1; i < inputRefs.length; i++) {
+        const next = inputRefs[i]?.current;
+        if (next && next.isConnected) {
+          next.focus();
+          return;
+        }
+      }
+      // Si no hay siguiente enfocable, enviar el formulario
+      // Usamos submitData porque handleSubmit previene por defecto
+      submitData();
+    }
+  };
+
+  const submitData = async () => {
     // Limpiar errores previos
     setSubmitError('');
     
@@ -144,17 +269,15 @@ const FormularioEmpresa = ({ onStepComplete, sessionId }) => {
 
     try {
       // Preparar los datos para enviar al orquestador
-      const payload = {
+      const stepData = {
         nit: formData.nit.trim(),
         razon_social: formData.razonSocial.trim(),
         tipo_empresa: formData.tipoEmpresa,
-        pagina_web: formData.paginaWeb.trim() || null,
-        facebook: formData.redesSociales.facebook.trim() || null,
-        instagram: formData.redesSociales.instagram.trim() || null,
-        linkedin: formData.redesSociales.linkedin.trim() || null,
-        twitter: formData.redesSociales.twitter.trim() || null,
-        autorizacion_consulta: formData.autorizacionConsulta,
-        habeas_data: formData.habeasData,
+        sitio_web: formData.sitioWeb.trim() || null,
+        telefono_empresa: formData.telefonoEmpresa.trim(),
+        direccion_empresa: formData.direccionEmpresa.trim(),
+        ciudad: formData.ciudad.trim(),
+        departamento: formData.departamento.trim(),
       };
 
       // Llamada a la API del orquestador
@@ -166,7 +289,10 @@ const FormularioEmpresa = ({ onStepComplete, sessionId }) => {
         body: JSON.stringify({
           action: 'submit_form_step',
           sessionId: sessionId,
-          payload: payload,
+          payload: {
+            currentStep: 1,
+            stepData: stepData,
+          },
         }),
       });
 
@@ -192,265 +318,385 @@ const FormularioEmpresa = ({ onStepComplete, sessionId }) => {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await submitData();
+  };
+
+  useEffect(() => {
+    if (registerStepActions) {
+      registerStepActions({
+        onSaveContinue: handleNextQuestion,
+      });
+    }
+    // no cleanup needed for simple registration
+  }, [registerStepActions, formData, sessionId, questionIndex]);
+
   return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
+    <form onSubmit={handleSubmit}>
+      <div>
         {/* Información Básica de la Empresa */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
-            <BusinessIcon sx={{ mr: 1, color: '#3b82f6' }} />
+        <div>
+          <h3 className="text-xl font-semibold border-b pb-2 mb-6 flex items-center w-full">
+            <BusinessIcon className="mr-1 text-primary" />
             Información Básica de la Empresa
-          </Typography>
+          </h3>
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="NIT de la Empresa"
-                value={formData.nit}
-                onChange={(e) => handleInputChange('nit', e.target.value)}
-                error={!!errors.nit}
-                helperText={errors.nit || 'Ingrese el NIT sin puntos ni guiones'}
-                placeholder="123456789"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <BusinessIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="nit">NIT de la Empresa</Label>
+                <div className="relative">
+                  <BusinessIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="nit"
+                    value={formData.nit}
+                    onChange={(e) => handleInputChange('nit', e.target.value)}
+                    placeholder="123456789"
+                    ref={nitRef}
+                    onKeyDown={(e) => handleKeyDown(e, 0)}
+                    className="pl-9"
+                  />
+                </div>
+                {errors.nit ? (
+                  <p className="text-xs text-destructive mt-1">{errors.nit}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">Formato: 9016859886-0 (incluya el guion y el dígito de verificación)</p>
+                )}
+              </div>
+            </div>
+            <div className="col-span-12">
+              <Button type="button" variant="outline" onClick={() => setMostrarRedes((v) => !v)}>
+                {mostrarRedes ? 'Ocultar redes sociales opcionales' : 'Agregar redes sociales (opcional)'}
+              </Button>
+            </div>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Razón Social"
-                value={formData.razonSocial}
-                onChange={(e) => handleInputChange('razonSocial', e.target.value)}
-                error={!!errors.razonSocial}
-                helperText={errors.razonSocial || 'Nombre completo de la empresa'}
-                placeholder="Empresa Ejemplo S.A.S."
-              />
-            </Grid>
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="razonSocial">Razón Social</Label>
+                <Input
+                  id="razonSocial"
+                  value={formData.razonSocial}
+                  onChange={(e) => handleInputChange('razonSocial', e.target.value)}
+                  placeholder="Empresa Ejemplo S.A.S."
+                  ref={razonSocialRef}
+                  onKeyDown={(e) => handleKeyDown(e, 1)}
+                />
+                {errors.razonSocial ? (
+                  <p className="text-xs text-destructive mt-1">{errors.razonSocial}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">Nombre completo de la empresa</p>
+                )}
+              </div>
+            </div>
 
-            <Grid item xs={12}>
-              <FormControl fullWidth error={!!errors.tipoEmpresa}>
-                <InputLabel>Tipo de Empresa</InputLabel>
-                <Select
-                  value={formData.tipoEmpresa}
-                  label="Tipo de Empresa"
-                  onChange={(e) => handleInputChange('tipoEmpresa', e.target.value)}
-                >
-                  {tiposEmpresa.map((tipo) => (
-                    <MenuItem key={tipo.value} value={tipo.value}>
-                      {tipo.label}
-                    </MenuItem>
-                  ))}
+            <div className="col-span-12">
+              <div className="mb-6">
+                <Label htmlFor="tipoEmpresa">Tipo de Empresa</Label>
+                <Select value={formData.tipoEmpresa} onValueChange={(value) => handleInputChange('tipoEmpresa', value)}>
+                  <SelectTrigger id="tipoEmpresa" ref={tipoEmpresaRef} onKeyDown={(e) => handleKeyDown(e, 2)} className="w-full">
+                    <SelectValue placeholder="Seleccione el tipo de empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tiposEmpresa.map((tipo) => (
+                      <SelectItem key={tipo.value} value={tipo.value}>
+                        {tipo.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
                 {errors.tipoEmpresa && (
-                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 2 }}>
-                    {errors.tipoEmpresa}
-                  </Typography>
+                  <p className="text-xs text-destructive mt-1">{errors.tipoEmpresa}</p>
                 )}
-              </FormControl>
-            </Grid>
-          </Grid>
-        </Box>
+              </div>
+            </div>
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="telefonoEmpresa">Teléfono de la Empresa</Label>
+                <Input
+                  id="telefonoEmpresa"
+                  value={formData.telefonoEmpresa}
+                  onChange={(e) => handleInputChange('telefonoEmpresa', e.target.value)}
+                  placeholder="3001234567"
+                  ref={telefonoRef}
+                  onKeyDown={(e) => handleKeyDown(e, 3)}
+                />
+                {errors.telefonoEmpresa ? (
+                  <p className="text-xs text-destructive mt-1">{errors.telefonoEmpresa}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">Solo dígitos, mínimo 7</p>
+                )}
+              </div>
+            </div>
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="direccionEmpresa">Dirección</Label>
+                <Input
+                  id="direccionEmpresa"
+                  value={formData.direccionEmpresa}
+                  onChange={(e) => handleInputChange('direccionEmpresa', e.target.value)}
+                  placeholder="Cra 7 # 123-45 Of. 301"
+                  ref={direccionRef}
+                  onKeyDown={(e) => handleKeyDown(e, 4)}
+                />
+                {errors.direccionEmpresa && (
+                  <p className="text-xs text-destructive mt-1">{errors.direccionEmpresa}</p>
+                )}
+              </div>
+            </div>
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="ciudad">Ciudad</Label>
+                <Input
+                  id="ciudad"
+                  value={formData.ciudad}
+                  onChange={(e) => handleInputChange('ciudad', e.target.value)}
+                  placeholder="Bogotá"
+                  ref={ciudadRef}
+                  onKeyDown={(e) => handleKeyDown(e, 5)}
+                />
+                {errors.ciudad && (
+                  <p className="text-xs text-destructive mt-1">{errors.ciudad}</p>
+                )}
+              </div>
+            </div>
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="departamento">Departamento</Label>
+                <Input
+                  id="departamento"
+                  value={formData.departamento}
+                  onChange={(e) => handleInputChange('departamento', e.target.value)}
+                  placeholder="Cundinamarca"
+                  ref={departamentoRef}
+                  onKeyDown={(e) => handleKeyDown(e, 6)}
+                />
+                {errors.departamento && (
+                  <p className="text-xs text-destructive mt-1">{errors.departamento}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <Divider sx={{ my: 4 }} />
+            <Separator className="my-8" />
 
         {/* Presencia Digital */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
-            <WebIcon sx={{ mr: 1, color: '#3b82f6' }} />
+        <div className="mt-12">
+          <h3 className="text-xl font-semibold border-b pb-2 mb-6 flex items-center w-full">
+            <WebIcon className="mr-1 text-primary" />
             Presencia Digital
-          </Typography>
+          </h3>
 
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Página Web"
-                value={formData.paginaWeb}
-                onChange={(e) => handleInputChange('paginaWeb', e.target.value)}
-                error={!!errors.paginaWeb}
-                helperText={errors.paginaWeb || 'URL de la página web de la empresa (opcional)'}
-                placeholder="https://www.miempresa.com"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <WebIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-12">
+              <div className="mb-6">
+                <Label htmlFor="sitioWeb">Sitio Web</Label>
+                <div className="relative">
+                  <WebIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="sitioWeb"
+                    value={formData.sitioWeb}
+                    onChange={(e) => handleInputChange('sitioWeb', e.target.value)}
+                    placeholder="https://www.miempresa.com"
+                    ref={sitioWebRef}
+                    onKeyDown={(e) => handleKeyDown(e, 7)}
+                    className="pl-9"
+                  />
+                </div>
+                {errors.sitioWeb ? (
+                  <p className="text-xs text-destructive mt-1">{errors.sitioWeb}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">URL de la página web de la empresa (opcional)</p>
+                )}
+              </div>
+            </div>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Facebook"
-                value={formData.redesSociales.facebook}
-                onChange={(e) => handleInputChange('redesSociales.facebook', e.target.value)}
-                placeholder="https://facebook.com/miempresa"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FacebookIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
+            {mostrarRedes && (
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="facebook">Facebook</Label>
+                <div className="relative">
+                  <FacebookIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="facebook"
+                    value={formData.redesSociales.facebook}
+                    onChange={(e) => handleInputChange('redesSociales.facebook', e.target.value)}
+                    placeholder="https://facebook.com/miempresa"
+                    ref={facebookRef}
+                    onKeyDown={(e) => handleKeyDown(e, 8)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </div>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Instagram"
-                value={formData.redesSociales.instagram}
-                onChange={(e) => handleInputChange('redesSociales.instagram', e.target.value)}
-                placeholder="https://instagram.com/miempresa"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <InstagramIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="instagram">Instagram</Label>
+                <div className="relative">
+                  <InstagramIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="instagram"
+                    value={formData.redesSociales.instagram}
+                    onChange={(e) => handleInputChange('redesSociales.instagram', e.target.value)}
+                    placeholder="https://instagram.com/miempresa"
+                    ref={instagramRef}
+                    onKeyDown={(e) => handleKeyDown(e, 9)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </div>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="LinkedIn"
-                value={formData.redesSociales.linkedin}
-                onChange={(e) => handleInputChange('redesSociales.linkedin', e.target.value)}
-                placeholder="https://linkedin.com/company/miempresa"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LinkedInIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="linkedin">LinkedIn</Label>
+                <div className="relative">
+                  <LinkedInIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="linkedin"
+                    value={formData.redesSociales.linkedin}
+                    onChange={(e) => handleInputChange('redesSociales.linkedin', e.target.value)}
+                    placeholder="https://linkedin.com/company/miempresa"
+                    ref={linkedinRef}
+                    onKeyDown={(e) => handleKeyDown(e, 10)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </div>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Twitter"
-                value={formData.redesSociales.twitter}
-                onChange={(e) => handleInputChange('redesSociales.twitter', e.target.value)}
-                placeholder="https://twitter.com/miempresa"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <TwitterIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-          </Grid>
-        </Box>
+            <div className="col-span-12 md:col-span-6">
+              <div className="mb-6">
+                <Label htmlFor="twitter">Twitter</Label>
+                <div className="relative">
+                <TwitterIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="twitter"
+                    value={formData.redesSociales.twitter}
+                    onChange={(e) => handleInputChange('redesSociales.twitter', e.target.value)}
+                    placeholder="https://twitter.com/miempresa"
+                    ref={twitterRef}
+                    onKeyDown={(e) => handleKeyDown(e, 11)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </div>
+            )}
+          </div>
+        </div>
 
-        <Divider sx={{ my: 4 }} />
+            <Separator className="my-8" />
 
         {/* Autorizaciones */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" sx={{ mb: 3 }}>
-            Autorizaciones y Consentimientos
-          </Typography>
+        <div className="mt-12">
+          <h3 className="text-xl font-semibold border-b pb-2 mb-6">Autorizaciones y Consentimientos</h3>
 
-          <Box sx={{ mb: 2 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.autorizacionConsulta}
-                  onChange={(e) => handleInputChange('autorizacionConsulta', e.target.checked)}
-                  color="primary"
-                />
-              }
-              label={
-                <Typography variant="body2">
-                  Autorizo a Wy Crédito para consultar mi información en las centrales de riesgo 
-                  (DataCrédito, CIFIN, etc.) para evaluar mi solicitud de crédito.
-                </Typography>
-              }
-            />
+          <div className="mb-6">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="autorizacion_consulta"
+                checked={formData.autorizacionConsulta}
+                onCheckedChange={(checked) => handleInputChange('autorizacionConsulta', Boolean(checked))}
+                ref={autorizacionConsultaRef}
+                onKeyDown={(e) => handleKeyDown(e, 12)}
+              />
+              <Label htmlFor="autorizacion_consulta" className="text-sm font-medium">
+                Autorizo a Wy Crédito para consultar mi información en las centrales de riesgo (DataCrédito, CIFIN, etc.) para evaluar mi solicitud de crédito. 
+                Consulte la
+                {' '}
+                <a
+                  href="/politica-de-privacidad"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary font-semibold underline hover:opacity-90"
+                >
+                  Política de Tratamiento de Datos Personales
+                </a>
+                .
+              </Label>
+            </div>
             {errors.autorizacionConsulta && (
-              <Alert severity="error" sx={{ mt: 1 }}>
-                {errors.autorizacionConsulta}
+              <Alert variant="destructive" className="mt-1">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{errors.autorizacionConsulta}</AlertDescription>
               </Alert>
             )}
-          </Box>
+          </div>
 
-          <Box sx={{ mb: 2 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.habeasData}
-                  onChange={(e) => handleInputChange('habeasData', e.target.checked)}
-                  color="primary"
-                />
-              }
-              label={
-                <Typography variant="body2">
-                  Acepto el tratamiento de mis datos personales de acuerdo con la 
-                  <strong> Política de Tratamiento de Datos Personales</strong> de Wy Crédito 
-                  y autorizo el uso de esta información para fines comerciales y de marketing.
-                </Typography>
-              }
-            />
+          <div className="mb-6">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="habeas_data"
+                checked={formData.habeasData}
+                onCheckedChange={(checked) => handleInputChange('habeasData', Boolean(checked))}
+                ref={habeasDataRef}
+                onKeyDown={(e) => handleKeyDown(e, 13)}
+              />
+              <Label htmlFor="habeas_data" className="text-sm font-medium">
+                Acepto el tratamiento de mis datos personales de acuerdo con la{' '}
+                <a
+                  href="/politica-de-privacidad"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary font-semibold underline hover:opacity-90"
+                >
+                  Política de Tratamiento de Datos Personales
+                </a>
+                {' '}de Wy Crédito y autorizo el uso de esta información para fines comerciales y de marketing.
+              </Label>
+            </div>
             {errors.habeasData && (
-              <Alert severity="error" sx={{ mt: 1 }}>
-                {errors.habeasData}
+              <Alert variant="destructive" className="mt-1">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{errors.habeasData}</AlertDescription>
               </Alert>
             )}
-          </Box>
-        </Box>
+          </div>
+        </div>
 
         {/* Error de envío */}
         {submitError && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {submitError}
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{submitError}</AlertDescription>
           </Alert>
         )}
 
-        {/* Botones de Acción */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-          <Button
-            variant="outlined"
-            size="large"
-            sx={{ minWidth: 120 }}
-            disabled={loading}
-          >
-            Cancelar
-          </Button>
+        {/* Botones de Acción locales (ocultos si hay barra flotante) */}
+        {!hideLocalActions && (
+          <div className="flex justify-between mt-12">
+            <Button type="button" variant="outline" size="lg" className="min-w-[120px]" disabled={loading}>
+              Cancelar
+            </Button>
 
-          <Button
-            type="submit"
-            variant="contained"
-            size="large"
-            disabled={loading}
-            sx={{ 
-              minWidth: 120,
-              backgroundColor: '#3b82f6',
-              '&:hover': {
-                backgroundColor: '#2563eb',
-              },
-            }}
-            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
-          >
-            {loading ? 'Guardando...' : 'Guardar y Continuar'}
-          </Button>
-        </Box>
-      </Paper>
-    </Box>
+            <Button type="submit" size="lg" className="min-w-[120px]" disabled={loading}>
+              {loading ? (
+                <>
+                  <Spinner className="mr-2 w-5 h-5" />
+                  Guardando...
+                </>
+              ) : (
+                'Guardar y Continuar'
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+    </form>
   );
 };
 
 export default FormularioEmpresa;
+  // Reportar progreso del paso al montar
+  useEffect(() => {
+    if (typeof onProgressUpdate === 'function') {
+      // Campos principales: NIT, Razón Social, Tipo, Teléfono, Dirección, Ciudad, Departamento, Sitio Web, Autorización, Habeas Data
+      onProgressUpdate({ currentQuestion: 1, totalQuestions: 10 });
+    }
+  }, [onProgressUpdate]);

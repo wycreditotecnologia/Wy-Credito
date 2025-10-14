@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  CircularProgress,
-  Alert,
-  Paper,
-  Chip,
-  Button
-} from '@mui/material';
+import { Chip, Button } from '@mui/material';
+import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
+import Spinner from '@/components/ui/spinner';
+import { AlertTriangle, Info } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -73,24 +65,28 @@ const MetricsDashboard = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Spinner className="w-6 h-6" />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ m: 2 }}>
-        {error}
+      <Alert variant="destructive" className="m-2">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
   }
 
   if (!metrics) {
     return (
-      <Alert severity="warning" sx={{ m: 2 }}>
-        No se pudieron cargar las métricas
+      <Alert className="m-2">
+        <Info className="h-4 w-4" />
+        <AlertTitle>Advertencia</AlertTitle>
+        <AlertDescription>No se pudieron cargar las métricas</AlertDescription>
       </Alert>
     );
   }
@@ -109,11 +105,11 @@ const MetricsDashboard = () => {
   const monthlyData = metrics.monthly_applications || [];
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">
+    <div className="p-3">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="text-2xl font-semibold">
           Dashboard de Métricas - Wy Crédito
-        </Typography>
+        </h4>
         <Button 
           variant="outlined" 
           onClick={() => navigate('/admin')}
@@ -121,98 +117,85 @@ const MetricsDashboard = () => {
         >
           Volver al Panel Admin
         </Button>
-      </Box>
+      </div>
       
       {/* Métricas principales */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+      <div className="grid grid-cols-12 gap-3 mb-4">
+        <div className="col-span-12 sm:col-span-6 md:col-span-3">
+          <div className="bg-card text-card-foreground rounded-lg border p-4 shadow-sm">
+              <p className="text-sm text-muted-foreground mb-1">
                 Total Solicitudes
-              </Typography>
-              <Typography variant="h4" component="div">
+              </p>
+              <div className="text-2xl font-semibold">
                 {formatNumber(metrics.total_applications)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+              </div>
+            </div>
+          </div>
         
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+        <div className="col-span-12 sm:col-span-6 md:col-span-3">
+          <div className="bg-card text-card-foreground rounded-lg border p-4 shadow-sm">
+              <p className="text-sm text-muted-foreground mb-1">
                 Monto Promedio
-              </Typography>
-              <Typography variant="h4" component="div">
+              </p>
+              <div className="text-2xl font-semibold">
                 {formatCurrency(metrics.average_amount)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+              </div>
+            </div>
+          </div>
         
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+        <div className="col-span-12 sm:col-span-6 md:col-span-3">
+          <div className="bg-card text-card-foreground rounded-lg border p-4 shadow-sm">
+              <p className="text-sm text-muted-foreground mb-1">
                 Monto Total
-              </Typography>
-              <Typography variant="h4" component="div">
+              </p>
+              <div className="text-2xl font-semibold">
                 {formatCurrency(metrics.total_amount)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+              </div>
+            </div>
+          </div>
         
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+        <div className="col-span-12 sm:col-span-6 md:col-span-3">
+          <div className="bg-card text-card-foreground rounded-lg border p-4 shadow-sm">
+              <p className="text-sm text-muted-foreground mb-1">
                 Solicitudes Hoy
-              </Typography>
-              <Typography variant="h4" component="div">
+              </p>
+              <div className="text-2xl font-semibold">
                 {formatNumber(metrics.applications_today)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+              </div>
+            </div>
+          </div>
+      </div>
 
       {/* Métricas por período */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+      <div className="grid grid-cols-12 gap-3 mb-4">
+        <div className="col-span-12 sm:col-span-4">
+          <div className="bg-card text-card-foreground rounded-lg border p-4 shadow-sm">
+              <p className="text-sm text-muted-foreground mb-1">
                 Esta Semana
-              </Typography>
-              <Typography variant="h5" component="div">
+              </p>
+              <div className="text-xl font-semibold">
                 {formatNumber(metrics.applications_this_week)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+              </div>
+            </div>
+          </div>
         
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+        <div className="col-span-12 sm:col-span-4">
+          <div className="bg-card text-card-foreground rounded-lg border p-4 shadow-sm">
+              <p className="text-sm text-muted-foreground mb-1">
                 Este Mes
-              </Typography>
-              <Typography variant="h5" component="div">
+              </p>
+              <div className="text-xl font-semibold">
                 {formatNumber(metrics.applications_this_month)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+              </div>
+            </div>
+          </div>
         
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+        <div className="col-span-12 sm:col-span-4">
+          <div className="bg-card text-card-foreground rounded-lg border p-4 shadow-sm">
+              <p className="text-sm text-muted-foreground mb-1">
                 Estados de Solicitudes
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+              </p>
+              <div className="flex flex-wrap gap-1 mt-1">
                 <Chip 
                   label={`Pendientes: ${metrics.pending_applications}`} 
                   color="warning" 
@@ -228,20 +211,19 @@ const MetricsDashboard = () => {
                   color="error" 
                   size="small" 
                 />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+              </div>
+            </div>
+          </div>
+      </div>
 
       {/* Gráficos */}
-      <Grid container spacing={3}>
+      <div className="grid grid-cols-12 gap-3">
         {/* Distribución por Estado */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
+        <div className="col-span-12 md:col-span-6">
+          <div className="bg-card text-card-foreground rounded-lg border p-2 shadow-sm">
+            <h6 className="text-lg font-semibold mb-2">
               Distribución por Estado
-            </Typography>
+            </h6>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -261,15 +243,15 @@ const MetricsDashboard = () => {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
-          </Paper>
-        </Grid>
+          </div>
+        </div>
 
         {/* Solicitudes por Mes */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
+        <div className="col-span-12 md:col-span-6">
+          <div className="bg-card text-card-foreground rounded-lg border p-2 shadow-sm">
+            <h6 className="text-lg font-semibold mb-2">
               Solicitudes por Mes
-            </Typography>
+            </h6>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -286,15 +268,15 @@ const MetricsDashboard = () => {
                 />
               </LineChart>
             </ResponsiveContainer>
-          </Paper>
-        </Grid>
+          </div>
+        </div>
 
         {/* Gráfico de barras por estado */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
+        <div className="col-span-12">
+          <div className="bg-card text-card-foreground rounded-lg border p-2 shadow-sm">
+            <h6 className="text-lg font-semibold mb-2">
               Resumen por Estado
-            </Typography>
+            </h6>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={statusData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -305,10 +287,10 @@ const MetricsDashboard = () => {
                 <Bar dataKey="value" fill="#8884d8" name="Cantidad de Solicitudes" />
               </BarChart>
             </ResponsiveContainer>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Box>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
 import { geminiModel } from '../lib/geminiClient';
-import { conversationFlow } from '../lib/conversationFlow';
 
 // --- FUNCIÓN DE EXTRACCIÓN CON IA (VERSIÓN FRONTEND) ---
 async function extractDataWithGemini(fileUrl, fileType) {
@@ -65,16 +64,25 @@ export class OrquestadorWally {
       'documento_rl': 'solicitudes',
       'telefono_rl': 'solicitudes',
       'email_rl': 'solicitudes',
+      'tipo_documento_rl': 'solicitudes',
       'monto_solicitado': 'solicitudes',
       'plazo_solicitado': 'solicitudes',
       'destino_credito': 'solicitudes',
       'ingresos_mensuales': 'solicitudes',
       'egresos_mensuales': 'solicitudes',
       'patrimonio': 'solicitudes',
-      'confirmacion_final': 'solicitudes',
+      'declaracion_veracidad': 'solicitudes',
+      'consentimiento_datos': 'solicitudes',
+      'declaracion_origen_fondos': 'solicitudes',
       'aceptacion_productiva': 'solicitudes',
       'aceptacion_no_personal': 'solicitudes',
       'aceptacion_habeas_data': 'solicitudes',
+
+      // Campos que van a la nueva tabla 'solicitantes'
+      'solicitante_nombre_completo': 'solicitantes',
+      'solicitante_email': 'solicitantes',
+      'solicitante_telefono': 'solicitantes',
+      'consentimiento_guardado_progresivo': 'solicitantes',
       
       // Campos que van a la tabla 'empresas'
       'nit': 'empresas',
@@ -110,7 +118,7 @@ export class OrquestadorWally {
       'descripcion_garantia': 'garantias',
       'valor_estimado_garantia': 'garantias',
       'url_foto_garantia': 'garantias'
-    };
+      };
   }
 
   // FUNCIÓN ENRUTADORA DE DATOS - Arquitectura Multi-tabla FINAL
@@ -157,8 +165,8 @@ export class OrquestadorWally {
       } else if (targetTable === 'documentos') {
         // Lógica para guardar URLs de documentos en la tabla 'documentos'
         const tipoDocumentoMap = {
-          'url_doc_identidad': 'documento_identidad_representante',
-          'url_certificado_existencia': 'certificado_existencia_representacion',
+          'url_doc_identidad': 'identidad_rl',
+          'url_certificado_existencia': 'certificado_existencia',
           'url_composicion_accionaria': 'composicion_accionaria',
           'url_declaracion_renta': 'declaracion_renta',
           'url_estados_financieros': 'estados_financieros'
@@ -172,7 +180,7 @@ export class OrquestadorWally {
           .insert({
             solicitud_id: solicitudId,
             tipo_documento: tipoDocumento,
-            url_archivo: value,
+            url_storage: value,
             nombre_archivo: nombreArchivo
           });
         
@@ -226,6 +234,32 @@ export class OrquestadorWally {
           if (error) throw new Error(`Error insertando garantía: ${error.message}`);
           console.log(`✅ Nueva garantía creada con campo '${dbField}':`, value);
         }
+      } else if (targetTable === 'solicitantes') {
+        // Crear o actualizar registro del solicitante vinculado a la solicitud
+        const { data: solicitanteData, error: solicitanteFindError } = await supabase
+          .from('solicitantes')
+          .select('id')
+          .eq('solicitud_id', solicitudId)
+          .single();
+
+        if (solicitanteFindError && solicitanteFindError.code !== 'PGRST116') {
+          console.warn('No se pudo buscar solicitante:', solicitanteFindError.message);
+        }
+
+        if (solicitanteData) {
+          const { error } = await supabase
+            .from('solicitantes')
+            .update({ [field]: value })
+            .eq('id', solicitanteData.id);
+          if (error) throw new Error(`Error actualizando solicitantes: ${error.message}`);
+          console.log(`✅ Campo '${field}' actualizado en solicitantes:`, value);
+        } else {
+          const { error } = await supabase
+            .from('solicitantes')
+            .insert({ [field]: value, solicitud_id: solicitudId });
+          if (error) throw new Error(`Error insertando en solicitantes: ${error.message}`);
+          console.log(`✅ Nuevo solicitante creado con campo '${field}':`, value);
+        }
       } else {
         console.warn(`⚠️ Campo "${field}" no tiene una tabla de destino definida.`);
         // Fallback: guardar en solicitudes como antes
@@ -241,6 +275,28 @@ export class OrquestadorWally {
     } catch (error) {
       console.error(`❌ Error en saveData para campo '${field}':`, error);
       throw error;
+    }
+  }
+
+  // NUEVO: procesarFormulario - guarda datos del paso y calcula siguiente paso
+  async procesarFormulario(sessionId, { currentStep, stepData } = {}) {
+    console.log(`Procesando paso ${currentStep} para la sesión ${sessionId}`, stepData);
+    try {
+      // Guardar los datos del paso actual usando el enrutador de datos existente
+      for (const field in stepData) {
+        if (!field) continue;
+        const value = stepData[field];
+        // Usa el map y la función saveData para enrutar a la tabla correcta
+        await this.saveData(sessionId, field, value);
+      }
+
+      // Lógica lineal para determinar el siguiente paso (puede evolucionar)
+      const nextStep = currentStep + 1;
+
+      return { success: true, nextStep };
+    } catch (error) {
+      console.error('Error en procesarFormulario:', error);
+      return { success: false, error: 'Hubo un error al procesar tu información.' };
     }
   }
 
@@ -301,148 +357,7 @@ export class OrquestadorWally {
     return { esValido: true, mensaje: 'NIT valido.' };
   }
 
-  // FUNCIÓN PRINCIPAL: Procesar mensaje completo (migrada desde API)
-  async procesarMensaje({ messages, currentStep, sessionId, isFileUpload }) {
-    try {
-      if (!sessionId) {
-        throw new Error("ID de sesión no proporcionado.");
-      }
-      
-      const userMessage = messages[messages.length - 1].text;
-      const currentLogic = conversationFlow.find(step => step.step === currentStep);
-      
-      if (!currentLogic) {
-        return { 
-          reply: "Ya ha completado todos los pasos.", 
-          nextStep: currentStep 
-        };
-      }
-
-      // Obtener datos de la solicitud
-      const { data: solicitudData, error: fetchError } = await supabase
-          .from('solicitudes').select('*').eq('id', sessionId).single();
-      
-      if (fetchError) throw fetchError;
-
-      const nombreSolicitante = solicitudData?.nombre_solicitante?.split(' ')[0] || '';
-
-      // --- LÓGICA FINAL DE ENVÍO ---
-      if (currentLogic.field === 'confirmacion_final') {
-        if (userMessage.toLowerCase().includes('sí')) {
-          // 1. Actualizar el estado de la solicitud en la BD
-          await supabase.from('solicitudes').update({ estado: 'pendiente' }).eq('id', sessionId);
-
-          // 2. Obtener todos los datos necesarios para el correo
-          const { data: solicitudCompleta } = await supabase.from('solicitudes').select('*').eq('id', sessionId).single();
-
-          // 3. Llamar a nuestra propia API para enviar el correo (esto necesitará ser adaptado)
-          const emailPayload = {
-            emailTo: solicitudCompleta.email,
-            nombreSolicitante: solicitudCompleta.nombre_solicitante,
-            montoSolicitado: solicitudCompleta.monto_solicitado,
-            plazo: solicitudCompleta.plazo_seleccionado,
-            solicitudId: sessionId,
-          };
-
-          // Por ahora, solo logueamos el payload del email
-          console.log("Email payload preparado:", emailPayload);
-
-          return {
-            reply: "¡Solicitud enviada con éxito! Recibirá un correo de confirmación con todos los detalles. Gracias por confiar en Wy Credito.",
-            nextStep: currentLogic.nextStep
-          };
-        } else {
-          // Lógica si el usuario cancela
-          await supabase.from('solicitudes').update({ estado: 'cancelada' }).eq('id', sessionId);
-          return { 
-            reply: "Entendido. Su solicitud ha sido cancelada. Puede cerrar esta ventana.", 
-            nextStep: currentStep 
-          };
-        }
-      }
-
-      // --- Manejo de archivos ---
-      if (isFileUpload) {
-          const fileUrl = userMessage;
-          const fileType = currentLogic.field;
-          
-          // --- Llamada a la nueva función de IA ---
-          const extractedData = await extractDataWithGemini(fileUrl, fileType);
-          
-          // Guardar los datos extraídos por la IA usando la función enrutadora
-          for (const [field, value] of Object.entries(extractedData)) {
-            await this.saveData(sessionId, field, value);
-          }
-          await supabase.from('documentos').insert({ 
-            solicitud_id: sessionId, 
-            tipo_documento: fileType, 
-            url_archivo: fileUrl, 
-            nombre_archivo: fileUrl.split('/').pop() 
-          });
-          
-          let reply = currentLogic.prompt.replace('{nombre_solicitante}', nombreSolicitante);
-          return { 
-            reply: `¡Perfecto! He procesado el documento y extraje los datos. ${reply}`, 
-            nextStep: currentLogic.nextStep 
-          };
-      }
-      
-      // --- Flujo normal de validación de texto ---
-      let isValid = false;
-      
-      // Validación para preguntas con opciones
-      if (currentLogic.options) {
-        isValid = currentLogic.options.map(opt => opt.toLowerCase()).includes(userMessage.toLowerCase().trim());
-      } else if (currentLogic.validation.type === 'text') {
-        isValid = userMessage.trim().length >= (currentLogic.validation.minLength || 1);
-      } else if (currentLogic.validation.type === 'email') {
-        isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userMessage);
-      } else if (currentLogic.validation.type === 'phone') {
-        isValid = /^\d{10}$/.test(userMessage.replace(/\D/g, ''));
-      } else if (currentLogic.validation.type === 'cedula') {
-        isValid = /^\d{8,10}$/.test(userMessage.replace(/\D/g, ''));
-      } else if (currentLogic.validation.type === 'confirmation') {
-        isValid = true; // Para confirmaciones, siempre es válido
-      }
-
-      if (!isValid) {
-          let errorMessage = currentLogic.errorMessage.replace('{nombre_solicitante}', nombreSolicitante);
-          return { 
-            reply: errorMessage, 
-            nextStep: currentStep 
-          };
-      }
-
-      // Guardar la respuesta del usuario usando la nueva función enrutadora
-      await this.saveData(sessionId, currentLogic.field, userMessage);
-      
-      // --- Flujo normal de la conversación ---
-      const nextLogic = conversationFlow.find(step => step.step === currentLogic.nextStep);
-      const nextMessage = nextLogic ? (nextLogic.question || nextLogic.prompt).replace('{nombre_solicitante}', nombreSolicitante) : "Ya hemos completado la solicitud.";
-      
-      // Construir respuesta base
-      const response = { 
-        reply: nextMessage, 
-        nextStep: currentLogic.nextStep 
-      };
-      
-      // Añadir uiType y options si existen en la definición del paso siguiente
-      if (nextLogic && nextLogic.uiType) {
-        response.uiType = nextLogic.uiType;
-      }
-      if (nextLogic && nextLogic.options) {
-        response.options = nextLogic.options;
-      }
-      
-      return response;
-
-    } catch (error) {
-      console.error("Error en el Orquestador:", error);
-      return { 
-        error: "Hubo un error procesando su solicitud." 
-      };
-    }
-  }
+  // (Eliminado) procesarMensaje: lógica del chat retirada en Fase 2
 
   // FUNCIÓN FINAL: Obtener todos los datos del resumen
   async getSummaryData(sessionId) {

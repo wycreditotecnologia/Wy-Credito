@@ -124,6 +124,24 @@ CREATE INDEX idx_solicitudes_created_at ON solicitudes(created_at);
 CREATE INDEX idx_documentos_solicitud ON documentos(solicitud_id);
 CREATE INDEX idx_documentos_tipo ON documentos(tipo_documento);
 
+-- =====================================================
+-- NUEVA TABLA: SOLICITANTES (Paso Cero)
+-- =====================================================
+-- Almacena los datos del solicitante y su consentimiento inicial,
+-- vinculada a la solicitud principal.
+CREATE TABLE IF NOT EXISTS solicitantes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    solicitud_id UUID REFERENCES solicitudes(id) ON DELETE CASCADE,
+    solicitante_nombre_completo TEXT,
+    solicitante_email TEXT,
+    solicitante_telefono TEXT,
+    consentimiento_guardado_progresivo BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_solicitantes_solicitud ON solicitantes(solicitud_id);
+CREATE INDEX IF NOT EXISTS idx_solicitantes_email ON solicitantes(solicitante_email);
+
 CREATE INDEX idx_conversaciones_solicitud ON conversaciones(solicitud_id);
 CREATE INDEX idx_conversaciones_created_at ON conversaciones(created_at);
 

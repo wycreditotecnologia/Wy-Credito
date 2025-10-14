@@ -16,6 +16,20 @@ export default {
     },
     extend: {
       colors: {
+        // Tokens de marca modernos
+        brand: {
+          DEFAULT: '#3A85F5',
+          hover: '#2C6AD4',
+          deep: '#1E3A8A',
+        },
+        surface: {
+          light: '#F7FAFC',
+          dark: '#101827',
+        },
+        text: {
+          headline: '#111827',
+          body: '#4B5563',
+        },
         'brand-primary': '#3A85F5',     // Antes 'brand-blue', ahora es el azul principal
         'brand-secondary': '#31C4E2',   // Nuevo cyan brillante
         'brand-blue': '#3B82F6',        // Color de marca azul (mantenido para compatibilidad)

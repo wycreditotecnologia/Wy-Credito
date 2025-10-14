@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Importamos useNavigate
-import { Box, Typography, Paper, Button } from '@mui/material';
+import { Button } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -45,11 +45,9 @@ const AdminDashboard = () => {
   };
 
   return (
-    <Paper sx={{ p: 3, m: 2, borderRadius: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h4" sx={{ fontFamily: 'Segoe UI', fontWeight: 'bold' }}>
-          Panel de Administración de Solicitudes
-        </Typography>
+    <div className="bg-card text-card-foreground rounded-lg border p-4 shadow-sm m-2">
+      <div className="flex justify-between items-center mb-2">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Panel de Administración de Solicitudes</h1>
         <Button 
           variant="contained" 
           color="primary" 
@@ -58,8 +56,8 @@ const AdminDashboard = () => {
         >
           Ver Dashboard de Métricas
         </Button>
-      </Box>
-      <Box sx={{ height: 600, width: '100%' }}>
+      </div>
+      <div className="h-[600px] w-full">
         <DataGrid
           rows={solicitudes}
           columns={columns}
@@ -73,8 +71,8 @@ const AdminDashboard = () => {
             },
           }}
         />
-      </Box>
-    </Paper>
+      </div>
+    </div>
   );
 };
 

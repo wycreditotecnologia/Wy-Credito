@@ -6,18 +6,12 @@ export default async function handler(req, res) {
         return res.status(405).json({ success: false, error: 'Method Not Allowed' });
     }
 
-    const { action, sessionId, payload, initialAmount } = req.body;
+    const { action, sessionId, payload } = req.body;
     const orquestador = new OrquestadorWally();
 
     try {
         let result;
         switch (action) {
-            case 'init':
-                result = await orquestador.iniciarConversacion(initialAmount);
-                break;
-            case 'submit_message':
-                result = await orquestador.procesarMensaje(sessionId, payload.message);
-                break;
             case 'submit_form_step':
                 result = await orquestador.procesarFormulario(sessionId, payload);
                 break;

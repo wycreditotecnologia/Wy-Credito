@@ -189,6 +189,12 @@ El proyecto sigue el Brand Book de Wy Crédito con:
 
 Para soporte técnico o consultas sobre el proyecto, contacta al equipo de desarrollo de Wy Crédito Tecnología.
 
+## 🗺️ Diagrama de Estructura de la Aplicación
+
+- Referencia: `docs/diagrams/application-structure.svg`
+- Vista rápida: ![Estructura de la aplicación](docs/diagrams/application-structure.svg)
+- Abre el archivo directamente para verlo a resolución completa.
+
 ---
 
 **Desarrollado con ❤️ por Wy Crédito Tecnología**
