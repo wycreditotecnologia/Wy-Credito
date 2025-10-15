@@ -9,14 +9,22 @@ import StepHeader from '@/components/StepHeader';
 import ProgressBar from '@/components/ProgressBar';
 // Eliminado StepNavigation: los controles flotantes ya no son necesarios
 
-// --- Simulación de la API del Orquestador ---
+// --- Cliente del Orquestador en backend (Vercel function) ---
 const createNewSession = async () => {
   console.log("Arquitecto: Solicitando nueva sesión al Orquestador...");
-  const newSessionId = crypto.randomUUID();
-  console.log("Arquitecto: Orquestador respondió con nuevo sessionId:", newSessionId);
-  return { sessionId: newSessionId };
+  const res = await fetch('/api/orchestrator', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'start' })
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json?.error || 'Error creando sesión');
+  }
+  console.log("Arquitecto: Orquestador respondió con nuevo sessionId:", json.sessionId);
+  return { sessionId: json.sessionId };
 };
-// --- Fin de la simulación ---
+// --- Fin del cliente ---
 
 const MainLayout = () => {
   const { sessionId } = useParams();

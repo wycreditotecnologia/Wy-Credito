@@ -25,7 +25,6 @@ const isValidApiKey = (key, minLength = 20) => {
 const supabaseConfig = {
   url: import.meta.env.VITE_SUPABASE_URL,
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-  serviceRoleKey: import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
   
   // Validación de configuración
   isValid() {
@@ -54,18 +53,12 @@ const supabaseConfig = {
     if (!isValidApiKey(this.anonKey, 100)) {
       errors.push('VITE_SUPABASE_ANON_KEY no parece válida (muy corta)');
     }
-    if (this.serviceRoleKey && !isValidApiKey(this.serviceRoleKey, 100)) {
-      errors.push('VITE_SUPABASE_SERVICE_ROLE_KEY no parece válida (muy corta)');
-    }
     return errors;
   },
   
   // Obtener advertencias de configuración
   getWarnings() {
     const warnings = [];
-    if (this.serviceRoleKey && isValidApiKey(this.serviceRoleKey, 100)) {
-      warnings.push('⚠️  Service Role Key configurada - úsala solo en backend seguro');
-    }
     return warnings;
   },
   

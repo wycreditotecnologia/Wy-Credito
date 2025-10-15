@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-// TEMPORAL: Puente Directo para Debugging
-const supabaseUrl = 'https://frdjajuabujxkyfulvmn.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZGphanVhYnVqeGt5ZnVsdm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2NjY5NDEsImV4cCI6MjA3NDI0Mjk0MX0.TD0rZCgrod7uAiklqJCd62Smf9MaojDbYkv5JIix1LU';
+// Variables de entorno (cliente) - usar solo anon key
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 let supabase;
 

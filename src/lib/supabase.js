@@ -1,9 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Configuración de Supabase
+// Configuración de Supabase (solo claves públicas en cliente)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabaseServiceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
 
 // Modo de desarrollo - usar cliente mock si no hay configuración
 const isDevelopment = import.meta.env.DEV || !supabaseUrl || !supabaseAnonKey
@@ -15,16 +14,8 @@ if (!isDevelopment && supabaseUrl && supabaseAnonKey) {
   // Cliente público (anon key)
   supabase = createClient(supabaseUrl, supabaseAnonKey)
   
-  // Cliente administrativo (service role key) - solo si está configurado
-  if (supabaseServiceRoleKey) {
-    supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
-    console.log('✅ Cliente administrativo de Supabase configurado')
-  }
+  // No configurar cliente administrativo en el frontend
+  supabaseAdmin = null
 } else {
   console.warn('Modo desarrollo: Usando cliente Supabase simulado')
   // Cliente mock para desarrollo
@@ -47,7 +38,7 @@ export { supabase, supabaseAdmin }
  * @returns {boolean} - True si está configurado
  */
 export function isAdminAvailable() {
-  return supabaseAdmin !== null && supabaseServiceRoleKey && supabaseServiceRoleKey !== 'your-service-role-key-here'
+  return false
 }
 
 /**
@@ -56,9 +47,6 @@ export function isAdminAvailable() {
  * @returns {Object} - Cliente de Supabase
  */
 export function getSupabaseClient(requiresAdmin = false) {
-  if (requiresAdmin && isAdminAvailable()) {
-    return supabaseAdmin
-  }
   return supabase
 }
 
