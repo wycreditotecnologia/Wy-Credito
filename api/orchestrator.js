@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const { randomUUID } = require('crypto');
+const { rejectIfBot, setRobotsHeader } = require('./_bot');
 
 // Env vars (server-side only)
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -11,6 +12,8 @@ const supabaseAdmin = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
   : null;
 
 module.exports = async function handler(req, res) {
+  setRobotsHeader(res);
+  if (rejectIfBot(req, res)) return;
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }

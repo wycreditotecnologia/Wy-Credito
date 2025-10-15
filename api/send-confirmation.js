@@ -3,11 +3,14 @@
 // CommonJS module for compatibility with Vercel Node runtime.
 
 const { Resend } = require('resend');
+const { rejectIfBot, setRobotsHeader } = require('./_bot');
 
 // Create Resend client with server-side API key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 module.exports = async (req, res) => {
+  setRobotsHeader(res);
+  if (rejectIfBot(req, res)) return;
   if (req.method !== 'POST') {
     res.status(405).json({ ok: false, error: 'Method Not Allowed' });
     return;
