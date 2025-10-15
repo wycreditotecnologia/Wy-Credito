@@ -28,6 +28,9 @@
   ],
   "author": "Wy Credito Tecnología",
   "license": "MIT",
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
