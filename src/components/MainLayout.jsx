@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Stepper, Step, StepLabel } from '@mui/material';
 
 // Importar todos los componentes de formulario
-import FormularioEmpresa from './forms/FormularioEmpresa';
-import FormularioFinanciero from './forms/FormularioFinanciero';
-import FormularioDocumentacion from './forms/FormularioDocumentacion';
-import FormularioReferencias from './forms/FormularioReferencias';
-import FormularioAceptacion from './forms/FormularioAceptacion';
-import FormularioGarantia from './forms/FormularioGarantia';
-import PantallaResumen from './forms/PantallaResumen';
+import FormularioEmpresa from './Forms/FormularioEmpresa';
+import FormularioFinanciero from './Forms/FormularioFinanciero';
+import FormularioDocumentacion from './Forms/FormularioDocumentacion';
+import FormularioReferencias from './Forms/FormularioReferencias';
+import FormularioAceptacion from './Forms/FormularioAceptacion';
+import FormularioGarantia from './Forms/FormularioGarantia';
+import PantallaResumen from './Forms/PantallaResumen';
 
 // Importar el orquestador
 import OrquestadorWally from '../services/orquestador';

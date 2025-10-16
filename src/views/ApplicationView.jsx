@@ -1,24 +1,24 @@
 import React, { useState, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import StepEmpresa_Typeform from '@/components/forms/typeform/StepEmpresa_Typeform';
-import StepDocumentacion_Typeform from '@/components/forms/typeform/StepDocumentacion_Typeform';
-import StepFinanciero_Typeform from '@/components/forms/typeform/StepFinanciero_Typeform';
-import StepReferencias_Typeform from '@/components/forms/typeform/StepReferencias_Typeform';
-import StepAceptacion_Typeform from '@/components/forms/typeform/StepAceptacion_Typeform';
-import StepGarantia_Typeform from '@/components/forms/typeform/StepGarantia_Typeform';
-import StepResumen_Typeform from '@/components/forms/typeform/StepResumen_Typeform';
+import StepEmpresa_Typeform from '@/components/Forms/typeform/StepEmpresa_Typeform';
+import StepDocumentacion_Typeform from '@/components/Forms/typeform/StepDocumentacion_Typeform';
+import StepFinanciero_Typeform from '@/components/Forms/typeform/StepFinanciero_Typeform';
+import StepReferencias_Typeform from '@/components/Forms/typeform/StepReferencias_Typeform';
+import StepAceptacion_Typeform from '@/components/Forms/typeform/StepAceptacion_Typeform';
+import StepGarantia_Typeform from '@/components/Forms/typeform/StepGarantia_Typeform';
+import StepResumen_Typeform from '@/components/Forms/typeform/StepResumen_Typeform';
 import { Label } from '@/components/ui/label';
-import PantallaExito from '../components/forms/PantallaExito';
+import PantallaExito from '../components/Forms/PantallaExito';
 import FormularioInicial from '../components/Forms/FormularioInicial';
 
 // Importar los componentes de formulario (lazy)
-const FormularioEmpresaTypeform = React.lazy(() => import('../components/forms/FormularioEmpresaTypeform'));
-const FormularioFinanciero = React.lazy(() => import('../components/forms/FormularioFinanciero'));
-const FormularioDocumentacion = React.lazy(() => import('../components/forms/FormularioDocumentacion'));
-const FormularioReferencias = React.lazy(() => import('../components/forms/FormularioReferencias'));
-const FormularioAceptacion = React.lazy(() => import('../components/forms/FormularioAceptacion'));
-const FormularioGarantia = React.lazy(() => import('../components/forms/FormularioGarantia'));
-const PantallaResumen = React.lazy(() => import('../components/forms/PantallaResumen'));
+const FormularioEmpresaTypeform = React.lazy(() => import('../components/Forms/FormularioEmpresaTypeform'));
+const FormularioFinanciero = React.lazy(() => import('../components/Forms/FormularioFinanciero'));
+const FormularioDocumentacion = React.lazy(() => import('../components/Forms/FormularioDocumentacion'));
+const FormularioReferencias = React.lazy(() => import('../components/Forms/FormularioReferencias'));
+const FormularioAceptacion = React.lazy(() => import('../components/Forms/FormularioAceptacion'));
+const FormularioGarantia = React.lazy(() => import('../components/Forms/FormularioGarantia'));
+const PantallaResumen = React.lazy(() => import('../components/Forms/PantallaResumen'));
 
 // Definición de los pasos del flujo (incluye paso inicial)
 const steps = [
@@ -126,22 +126,22 @@ const ApplicationView = ({ sessionId, onProgressUpdate, currentStep, setCurrentS
         );
       case 2:
         // Renderiza el 'Jefe de Paso' para Información Empresarial
-        return <StepEmpresa_Typeform onComplete={handleStepComplete} onProgressUpdate={onProgressUpdate} />;
+        return <StepEmpresa_Typeform onComplete={handleStepComplete} sessionId={sessionId} onProgressUpdate={onProgressUpdate} />;
       case 3:
         // Renderiza el 'Jefe de Paso' para Documentación Legal
-        return <StepDocumentacion_Typeform onComplete={handleStepComplete} onProgressUpdate={onProgressUpdate} />;
+        return <StepDocumentacion_Typeform onComplete={handleStepComplete} sessionId={sessionId} onProgressUpdate={onProgressUpdate} />;
       case 4:
         // Renderiza el 'Jefe de Paso' para Información Financiera
         return <StepFinanciero_Typeform onComplete={handleStepComplete} sessionId={sessionId} onProgressUpdate={onProgressUpdate} />;
       case 5:
         // Renderiza el 'Jefe de Paso' para Referencias Comerciales
-        return <StepReferencias_Typeform onComplete={handleStepComplete} onProgressUpdate={onProgressUpdate} />;
+        return <StepReferencias_Typeform onComplete={handleStepComplete} sessionId={sessionId} onProgressUpdate={onProgressUpdate} />;
       case 6:
         // Renderiza el 'Jefe de Paso' para Declaraciones y Aceptación
-        return <StepAceptacion_Typeform onComplete={handleStepComplete} onProgressUpdate={onProgressUpdate} />;
+        return <StepAceptacion_Typeform onComplete={handleStepComplete} sessionId={sessionId} onProgressUpdate={onProgressUpdate} />;
       case 7:
         // Renderiza el 'Jefe de Paso' para Garantía
-        return <StepGarantia_Typeform onComplete={handleStepComplete} onProgressUpdate={onProgressUpdate} />;
+        return <StepGarantia_Typeform onComplete={handleStepComplete} sessionId={sessionId} onProgressUpdate={onProgressUpdate} />;
       case 8:
         // Renderiza el 'Jefe de Paso' para Resumen Final
         return <StepResumen_Typeform formData={formData} onComplete={handleStepComplete} sessionId={sessionId} onProgressUpdate={onProgressUpdate} />;

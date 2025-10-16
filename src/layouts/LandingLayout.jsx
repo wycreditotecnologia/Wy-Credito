@@ -1,6 +1,6 @@
 import React from 'react';
-import Navbar from '../components/layout/Navbar'; // Lo crearemos a continuación
-import Footer from '../components/layout/Footer'; // Lo crearemos a continuación
+import Navbar from '../components/Layout/Navbar'; // Lo crearemos a continuación
+import Footer from '../components/Layout/Footer'; // Lo crearemos a continuación
 import { CookieConsentBanner } from '@/components/landing/CookieConsentBanner';
 
 const LandingLayout = ({ children }) => {
