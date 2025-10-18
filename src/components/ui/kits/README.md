@@ -29,7 +29,7 @@ También puedes solicitar su implementación diciendo: "Monta este kit en [nombr
 - `brandName` (string): nombre de la marca. Por defecto `Wy Credito`.
 - `navItems` (array): `{ label, href }[]` para enlaces del menú.
 - `showDualModal` (boolean): muestra el toggle de modales. Por defecto `true`.
-- `simulateHref` (string): ancla para "Simular Crédito". Por defecto `#simulator`.
+- `simulateHref` (string): ancla para "Simular Crédito". Por defecto `#simulador`.
 - `solicitarTo` (string): ruta del CTA principal. Por defecto `/solicitud`.
 - `sticky` (boolean): activa comportamiento pegajoso. Por defecto `true`.
 - `className` (string): clases adicionales.
@@ -41,7 +41,7 @@ Ejemplo personalizado:
   brandName="Mi Marca"
   logoSrc="/assets/mi-logo.svg"
   navItems=[
-    { label: 'Inicio', href: '#hero' },
+  { label: 'Inicio', href: '#inicio' },
     { label: 'Servicios', href: '#services' },
   ]
   solicitarTo="/contacto"
@@ -69,7 +69,7 @@ Ejemplo personalizado:
   highlight="sin complicaciones."
   subtitle="Proceso 100% digital y transparente."
   primaryCta={{ label: 'Solicitar ahora', to: '/solicitud', icon: true }}
-  secondaryCta={{ label: 'Ver beneficios', href: '#features' }}
+  secondaryCta={{ label: 'Ver beneficios', href: '#beneficios' }}
   gradientFrom="from-blue-500"
   gradientTo="to-cyan-500"
 />

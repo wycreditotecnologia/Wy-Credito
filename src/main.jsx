@@ -1,3 +1,7 @@
+/*
+  Diseño y Desarrollo por Krezco.Digital — https://krezco.digital
+  Atribución: footer visible, watermark sutil, metadatos y X-Powered-By.
+*/
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';

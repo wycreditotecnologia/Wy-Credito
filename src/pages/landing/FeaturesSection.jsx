@@ -27,7 +27,7 @@ const benefits = [
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="relative bg-white dark:bg-black py-20 overflow-hidden">
+  <section id="beneficios" className="relative bg-white dark:bg-black py-20 overflow-hidden scroll-mt-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <motion.h2

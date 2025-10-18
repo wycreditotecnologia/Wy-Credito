@@ -1,7 +1,7 @@
 {
-  "name": "wally-credito-assistant",
+  "name": "wy-credito-ia",
   "version": "1.0.0",
-  "description": "Wally - Asistente de Crédito de Wy Tecnología",
+  "description": "Wy Credito IA - Asistente de Crédito",
   "main": "src/index.js",
   "scripts": {
     "dev": "vite",
@@ -60,6 +60,7 @@
     "react-dom": "^18.2.0",
     "react-email": "^4.2.12",
     "react-router-dom": "^7.9.3",
+    "react-router-hash-link": "^2.4.3",
     "react-tsparticles": "^2.12.2",
     "recharts": "^3.2.1",
     "resend": "^6.1.1",
@@ -82,5 +83,6 @@
     "tailwindcss": "^3.3.3",
     "typescript": "^5.3.3",
     "vite": "^4.4.5"
-  }
+  },
+  "type": "module"
 }

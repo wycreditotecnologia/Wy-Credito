@@ -1,8 +1,0 @@
-User-agent: *
-# Permitir rastreo general del sitio
-Allow: /
-# Bloquear endpoints de API para crawlers
-Disallow: /api/
-
-# Ubicación del Sitemap
-Sitemap: https://wycredito.com/sitemap.xml

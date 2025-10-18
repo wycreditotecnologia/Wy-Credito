@@ -1,47 +1,40 @@
 import { supabase } from '../lib/supabaseClient';
-import { geminiModel } from '../lib/geminiClient';
 
-// --- FUNCIÓN DE EXTRACCIÓN CON IA (VERSIÓN FRONTEND) ---
-async function extractDataWithGemini(fileUrl, fileType) {
-  console.log(`Iniciando extracción con IA para el archivo: ${fileUrl}`);
-  
+// --- FUNCIÓN DE EXTRACCIÓN CON IA (AHORA VIA BACKEND) ---
+export async function extractDataWithGemini(fileUrl, fileType, tipoDocumento) {
+  console.log(`Iniciando extracción con IA (backend) para el archivo: ${fileUrl}`);
+
   try {
-    // 1. Descargar el archivo desde la URL pública de Supabase
-    const response = await fetch(fileUrl);
-    const arrayBuffer = await response.arrayBuffer();
-    const fileBase64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-    
-    // 2. Determinar el prompt de workflow correcto según el tipo de documento
-    let extractionPrompt;
-    if (fileType === 'doc_certificado_existencia') {
-      extractionPrompt = `Actúa como un analista de datos experto. Extrae el NIT (incluyendo dígito de verificación) y la Razón Social completa de este Certificado de Existencia y Representación Legal. Responde únicamente con un objeto JSON válido con las claves "nit" y "razon_social".`;
-    } else {
-      // Aquí añadiríamos prompts para otros tipos de documentos (balances, RUT, etc.)
-      extractionPrompt = `Analiza este documento y extrae la información relevante. Responde solo en formato JSON.`;
+    // Determinar tipo MIME a partir del argumento o extensión
+    let mimeType = 'application/pdf';
+    if (fileType && fileType.includes('/')) {
+      mimeType = fileType;
+    } else if (typeof fileUrl === 'string') {
+      const lower = fileUrl.toLowerCase();
+      if (lower.endsWith('.png')) mimeType = 'image/png';
+      else if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) mimeType = 'image/jpeg';
+      else if (lower.endsWith('.pdf')) mimeType = 'application/pdf';
     }
 
-    // 3. Preparar el request para la API de Gemini
-    const generativePart = {
-      inlineData: {
-        mimeType: 'application/pdf', // Asumimos PDF por ahora
-        data: fileBase64,
-      },
-    };
+    // Llamada al endpoint seguro en Vercel
+    const resp = await fetch('/api/gemini-extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileUrl, fileType: mimeType, tipo_documento: tipoDocumento })
+    });
 
-    // 4. Llamar a la API de Gemini
-    const result = await geminiModel.generateContent([extractionPrompt, generativePart]);
-    const geminiResponseText = result.response.text();
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => '');
+      throw new Error(`Error del backend (${resp.status}): ${errText}`);
+    }
 
-    // 5. Limpiar y parsear la respuesta JSON para asegurar que sea válida
-    const jsonString = geminiResponseText.replace(/```json|```/g, '').trim();
-    const extractedData = JSON.parse(jsonString);
-
-    console.log("Datos extraídos por Gemini:", extractedData);
+    const payload = await resp.json();
+    const extractedData = payload?.data || {};
+    console.log('Datos extraídos por Gemini (backend):', extractedData);
     return extractedData;
-
   } catch (error) {
-    console.error("Error en la extracción con Gemini:", error);
-    // Si la IA falla, devolvemos un objeto vacío para no detener el flujo
+    console.error('Error en la extracción con Gemini (backend):', error);
+    // Fallback para no detener el flujo del usuario
     return {};
   }
 }

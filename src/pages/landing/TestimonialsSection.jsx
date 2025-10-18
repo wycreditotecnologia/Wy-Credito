@@ -52,7 +52,7 @@ const duplicatedTestimonials = [...testimonials, ...testimonials];
 
 export default function TestimonialsSection() {
   return (
-    <section id="testimonials" className="relative bg-white dark:bg-black py-24 overflow-hidden">
+  <section id="testimonios" className="relative bg-white dark:bg-black py-24 overflow-hidden scroll-mt-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-16 text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}

@@ -53,9 +53,9 @@ const LandingPage = () => {
             <span className="text-xl font-heading font-bold text-wy-dark">Wy Crédito</span>
           </div>
           <nav className="hidden md:flex space-x-8">
-            <a href="#features" className="text-wy-moderate hover:text-wy-dark font-body">Características</a>
-            <a href="#how-it-works" className="text-wy-moderate hover:text-wy-dark font-body">Cómo Funciona</a>
-            <a href="#testimonials" className="text-wy-moderate hover:text-wy-dark font-body">Testimonios</a>
+            <a href="#beneficios" className="text-wy-moderate hover:text-wy-dark font-body">Características</a>
+            <a href="#como-funciona" className="text-wy-moderate hover:text-wy-dark font-body">Cómo Funciona</a>
+            <a href="#testimonios" className="text-wy-moderate hover:text-wy-dark font-body">Testimonios</a>
             <a href="#faq" className="text-wy-moderate hover:text-wy-dark font-body">FAQ</a>
           </nav>
           <button className="bg-wy-primary text-white px-4 py-2 rounded-lg hover:bg-wy-dark transition-colors font-body">
@@ -259,7 +259,7 @@ const LandingPage = () => {
       </section>
 
       {/* How it Works Section */}
-      <section id="how-it-works" className="py-20 px-6 bg-white">
+      <section id="como-funciona" className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <motion.h2 
@@ -377,7 +377,7 @@ const LandingPage = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 px-6 bg-wy-light">
+      <section id="testimonios" className="py-20 px-6 bg-wy-light">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

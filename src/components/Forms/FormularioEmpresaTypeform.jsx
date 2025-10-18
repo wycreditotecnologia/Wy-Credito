@@ -32,6 +32,32 @@ const FormularioEmpresaTypeform = ({ onStepComplete, sessionId, registerStepActi
   const [submitError, setSubmitError] = useState('');
   const [questionIndex, setQuestionIndex] = useState(0);
 
+  // Utilidad: calcular DV NIT (módulo 11 - DIAN)
+  const calcularDVNIT = (nitBase) => {
+    const pesos = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+    const limpio = String(nitBase || '').replace(/\D/g, '');
+    let suma = 0;
+    for (let i = 0; i < limpio.length && i < pesos.length; i++) {
+      const dig = parseInt(limpio.charAt(limpio.length - 1 - i), 10) || 0;
+      suma += dig * pesos[i];
+    }
+    const resto = suma % 11;
+    return resto > 1 ? 11 - resto : resto;
+  };
+
+  // Prefill desde extracción automática (si existe)
+  useEffect(() => {
+    try {
+      const preNit = localStorage.getItem(`pre_nit_${sessionId}`) || '';
+      const preRazon = localStorage.getItem(`pre_razon_social_${sessionId}`) || '';
+      setFormData(prev => ({
+        ...prev,
+        nit: prev.nit || preNit,
+        razonSocial: prev.razonSocial || preRazon,
+      }));
+    } catch {}
+  }, [sessionId]);
+
   // Opciones para tipo de empresa
   const tiposEmpresa = [
     { value: 'sas', label: 'Sociedad por Acciones Simplificada (SAS)' },
@@ -153,8 +179,14 @@ const FormularioEmpresaTypeform = ({ onStepComplete, sessionId, registerStepActi
 
     setLoading(true);
     try {
+      // Convertir NIT a formato con DV si viene sin guion y es válido
+      const nitClean = (formData.nit || '').replace(/[.-]/g, '').trim();
+      const nitFormatted = nitClean && /^\d{9,11}$/.test(nitClean)
+        ? `${nitClean}-${calcularDVNIT(nitClean)}`
+        : (formData.nit || '').trim();
+
       const stepData = {
-        nit: formData.nit.trim(),
+        nit: nitFormatted,
         razon_social: formData.razonSocial.trim(),
         tipo_empresa: formData.tipoEmpresa,
         sitio_web: (formData.paginaWeb || '').trim() || null,
@@ -290,8 +322,19 @@ const FormularioEmpresaTypeform = ({ onStepComplete, sessionId, registerStepActi
                 className="pl-9"
               />
             </div>
-            {errors.nit && (
+            {errors.nit ? (
               <p className="text-sm text-destructive mt-2">{errors.nit}</p>
+            ) : (
+              (() => {
+                const limpio = String(formData.nit || '').replace(/\D/g, '');
+                if (/^\d{9,11}$/.test(limpio)) {
+                  const dv = calcularDVNIT(limpio);
+                  return (
+                    <p className="text-sm text-muted-foreground mt-2">DV sugerido: {dv} • Se guardará como {limpio}-{dv}</p>
+                  );
+                }
+                return null;
+              })()
             )}
           </div>
         </TypeformQuestion>

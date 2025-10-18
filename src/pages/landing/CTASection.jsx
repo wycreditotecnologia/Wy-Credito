@@ -54,9 +54,9 @@ export default function CTASection() {
                 </Button>
                 
                 <Button size="lg" variant="outline" asChild className="text-lg px-8 py-6 w-full sm:w-auto text-black dark:text-white border-2 border-black dark:border-white hover:bg-black/5 dark:hover:bg-white/10">
-                  <a href="#">
+                  <Link to="#">
                     Hablar con un Asesor
-                  </a>
+                  </Link>
                 </Button>
               </div>
 

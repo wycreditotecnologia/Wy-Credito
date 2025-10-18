@@ -40,6 +40,8 @@ const ApplicationView = ({ sessionId, onProgressUpdate, currentStep, setCurrentS
   const normalizeStepData = (data) => {
     const keyMap = {
       razonSocial: 'razon_social',
+      tipoEmpresa: 'tipo_empresa',
+      paginaWeb: 'sitio_web',
       valor_estimado: 'valor_estimado_garantia',
       referencia1_nombre: 'nombre_referencia_1',
       referencia1_contacto: 'telefono_referencia_1',

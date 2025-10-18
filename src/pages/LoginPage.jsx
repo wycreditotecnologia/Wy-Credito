@@ -7,8 +7,9 @@ import { Mail, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import HeaderKit from '@/components/ui/kits/HeaderKit.jsx';
+import Header from './landing/Header';
 import HeroKit from '@/components/ui/kits/HeroKit.jsx';
+import CompactFooter from '@/components/Layout/CompactFooter.jsx';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -119,13 +120,13 @@ const LoginPage = () => {
 
   return (
     <>
-      <HeaderKit showActions={false} />
+      <Header />
       <HeroKit
         headline="Accede o crea tu cuenta,"
         highlight="de forma simple y segura."
         subtitle="Inicia sesión con tu correo y contraseña o regístrate para empezar tu solicitud."
         primaryCta={{ label: 'Ir a Solicitud', to: '/solicitud', icon: true }}
-        secondaryCta={{ label: 'Conocer Beneficios', href: '#features' }}
+            secondaryCta={{ label: 'Conocer Beneficios', href: '#beneficios' }}
         showDefaultContent={false}
       >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -295,15 +296,16 @@ const LoginPage = () => {
             <Link to="/solicitud" className="inline-flex items-center px-5 py-3 rounded-md bg-gradient-to-r from-brand-primary to-brand-secondary text-white hover:opacity-90 shadow-lg shadow-blue-500/30">
               Ir a Solicitud
             </Link>
-            <a href="#features" className="inline-flex items-center px-5 py-3 rounded-md border border-black dark:border-white text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10">
+            <Link to="/#beneficios" className="inline-flex items-center px-5 py-3 rounded-md border border-black dark:border-white text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10">
               Conocer Beneficios
-            </a>
+            </Link>
           </div>
         </div>
       </div>
       </HeroKit>
+      <CompactFooter />
     </>
   );
-};
+}
 
 export default LoginPage;

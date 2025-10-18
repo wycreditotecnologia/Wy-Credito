@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from '../components/Layout/Navbar'; // Lo crearemos a continuación
 import Footer from '../components/Layout/Footer'; // Lo crearemos a continuación
 import { CookieConsentBanner } from '@/components/landing/CookieConsentBanner';
+import WatermarkOverlay from '@/components/Layout/WatermarkOverlay.jsx';
 
 const LandingLayout = ({ children }) => {
   return (
@@ -12,6 +13,7 @@ const LandingLayout = ({ children }) => {
       </main>
       <Footer />
       <CookieConsentBanner />
+      <WatermarkOverlay />
     </div>
   );
 };

@@ -1,11 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { HashLink as Link } from 'react-router-hash-link';
 // IMPORTACIONES ACTUALIZADAS
 import { TextGenerateEffect } from '../ui/text-generate-effect';
 import { ShimmerButton } from '../ui/shimmer-button';
 
 const HeroSection = () => {
   const words = `Tu Futuro Empresarial. Financiado Hoy.`;
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+  const base = isHome ? '' : '/';
 
   return (
     <section className="relative w-full h-[calc(100vh-4rem)] flex flex-col items-center justify-center text-center px-4">
@@ -21,7 +25,7 @@ const HeroSection = () => {
         </p>
         
         <div className="mt-8 flex flex-col sm:flex-row gap-4">
-          <a href="#simulador">
+          <Link to={`${base}#simulador`}>
             <ShimmerButton
               shimmerColor="#31C4E2" // Nuestro color cyan secundario para el brillo
               shimmerSize="0.1em"
@@ -33,11 +37,11 @@ const HeroSection = () => {
                 Simula tu Crédito
               </span>
             </ShimmerButton>
-          </a>
+          </Link>
           
-          <a href="#como-funciona" className="inline-flex h-12 items-center justify-center rounded-md border border-gray-700 bg-transparent px-6 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-800 hover:text-white">
+          <Link to={`${base}#como-funciona`} className="inline-flex h-12 items-center justify-center rounded-md border border-gray-700 bg-transparent px-6 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-800 hover:text-white">
             Conoce el Proceso
-          </a>
+          </Link>
         </div>
       </div>
     </section>

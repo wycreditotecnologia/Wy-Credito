@@ -10,6 +10,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from ".
 import { Button } from "../ui/button";
 import { Person as PersonIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import FileUpload from '../FileUpload/FileUpload'; // Importamos el componente reutilizable
+import { extractDataWithGemini } from '@/services/orquestador';
 
 const FormularioDocumentacion = ({ onStepComplete, sessionId, onProgressUpdate }) => {
     const [formData, setFormData] = useState({
@@ -25,6 +26,7 @@ const FormularioDocumentacion = ({ onStepComplete, sessionId, onProgressUpdate }
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [submitError, setSubmitError] = useState('');
+    const [aiStatus, setAiStatus] = useState({ extracting: false, error: '', nit: '', razon: '' });
 
     // Refs para navegación con Enter
     const nombreRef = useRef(null);
@@ -68,7 +70,7 @@ const FormularioDocumentacion = ({ onStepComplete, sessionId, onProgressUpdate }
         url_composicion_accionaria: 'composicion_accionaria'
     };
 
-    const handleUploadSuccess = (url, documentType, meta = {}) => {
+    const handleUploadSuccess = async (url, documentType, meta = {}) => {
         setFormData(prev => ({ ...prev, [documentType]: url }));
         const tipo_documento = tipoDocumentoMap[documentType] || documentType;
         // Agregar/actualizar entrada en uploadedFiles por tipo_documento
@@ -85,6 +87,46 @@ const FormularioDocumentacion = ({ onStepComplete, sessionId, onProgressUpdate }
                 }
             ];
         });
+
+        // Disparar extracción automática para Certificado de Existencia
+        if (documentType === 'url_certificado_existencia') {
+            try {
+                setAiStatus({ extracting: true, error: '', nit: '', razon: '' });
+                const mime = meta?.tipo_mime || undefined;
+                const ai = await extractDataWithGemini(url, mime, 'certificado_existencia');
+                const nit = (ai?.nit || '').toString().trim();
+                const razon = (ai?.razon_social || ai?.razonSocial || '').toString().trim();
+
+                // Guardar para autocompletar en "Información Empresarial"
+                try {
+                    if (nit) localStorage.setItem(`pre_nit_${sessionId}`, nit);
+                    if (razon) localStorage.setItem(`pre_razon_social_${sessionId}`, razon);
+                } catch {}
+
+                // Registrar log del evento (no bloqueante)
+                try {
+                    fetch('/api/orchestrator', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'log',
+                            data: {
+                                solicitud_id: sessionId,
+                                accion: 'ai_extract_certificado',
+                                estado_anterior: null,
+                                estado_nuevo: null,
+                                datos_validados: { nit, razon_social: razon },
+                                errores: null,
+                            },
+                        }),
+                    }).catch(() => {});
+                } catch {}
+
+                setAiStatus({ extracting: false, error: '', nit, razon });
+            } catch (err) {
+                setAiStatus({ extracting: false, error: 'No fue posible extraer datos del certificado.', nit: '', razon: '' });
+            }
+        }
     };
 
     const validate = () => {
@@ -256,7 +298,16 @@ const FormularioDocumentacion = ({ onStepComplete, sessionId, onProgressUpdate }
                         )}
                     </div>
                     <div className="col-span-12">
-                        <div className="mb-6"><FileUpload label="Certificado de Existencia y Representación" sessionId={sessionId} documentType="url_certificado_existencia" onUploadSuccess={handleUploadSuccess} helperText="PDF ≤ 10MB. Certificado vigente de Cámara de Comercio." /></div>
+                        <div className="mb-2"><FileUpload label="Certificado de Existencia y Representación" sessionId={sessionId} documentType="url_certificado_existencia" onUploadSuccess={handleUploadSuccess} helperText="PDF ≤ 10MB. Certificado vigente de Cámara de Comercio." /></div>
+                        {aiStatus.extracting && (
+                            <p className="text-xs text-muted-foreground mb-4">Extrayendo datos de NIT y Razón Social…</p>
+                        )}
+                        {!aiStatus.extracting && (aiStatus.nit || aiStatus.razon) && (
+                            <p className="text-xs text-green-700 mb-4">Extraído: NIT {aiStatus.nit || '—'} • Razón Social {aiStatus.razon || '—'} (puede editarse en Información Empresarial)</p>
+                        )}
+                        {aiStatus.error && (
+                            <p className="text-xs text-destructive mb-4">{aiStatus.error}</p>
+                        )}
                         {errors.certificado_existencia && (
                             <p className="text-xs text-destructive mt-1">{errors.certificado_existencia}</p>
                         )}

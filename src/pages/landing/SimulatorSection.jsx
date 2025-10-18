@@ -26,7 +26,7 @@ export default function SimulatorSection() {
   };
 
   return (
-    <section id="simulator" className="relative bg-white dark:bg-gray-950/50 py-20 overflow-hidden">
+  <section id="simulador" className="relative bg-white dark:bg-gray-950/50 py-20 overflow-hidden scroll-mt-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-black dark:text-white">

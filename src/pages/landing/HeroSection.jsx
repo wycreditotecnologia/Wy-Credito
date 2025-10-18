@@ -1,13 +1,17 @@
 // src/pages/landing/HeroSection.jsx
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { HashLink as Link } from 'react-router-hash-link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Sparkles, TrendingUp, Zap, ShieldCheck } from 'lucide-react';
 
 export default function HeroSection() {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+  const base = isHome ? '' : '/';
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 md:pt-32">
+  <section id="inicio" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 md:pt-32 scroll-mt-20">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gray-50 dark:bg-black" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e1e1e_1px,transparent_1px),linear-gradient(to_bottom,#1e1e1e_1px,transparent_1px)] bg-[size:6rem_4rem]" />
@@ -68,13 +72,13 @@ export default function HeroSection() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button size="lg" asChild className="bg-gradient-to-r from-brand-primary to-brand-secondary text-white hover:opacity-90 shadow-lg shadow-blue-500/30">
-              <Link to="/solicitud">
+              <RouterLink to="/solicitud">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Inicia tu Solicitud Ahora
-              </Link>
+              </RouterLink>
             </Button>
             <Button size="lg" variant="outline" asChild className="text-black dark:text-white border-black dark:border-white hover:bg-black/5 dark:hover:bg-white/10">
-              <a href="#features">Conocer Beneficios</a>
+        <Link to={`${base}#beneficios`}>Conocer Beneficios</Link>
             </Button>
           </motion.div>
         

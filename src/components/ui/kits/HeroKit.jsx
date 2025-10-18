@@ -1,6 +1,7 @@
 // src/components/ui/kits/HeroKit.jsx
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { HashLink as Link } from 'react-router-hash-link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Sparkles, TrendingUp } from 'lucide-react';
@@ -11,7 +12,7 @@ import { Sparkles, TrendingUp } from 'lucide-react';
  * Permite configurar textos, colores, enlaces y visibilidad de elementos.
  */
 export default function HeroKit({
-  id = 'hero',
+  id = 'inicio',
   showAIChip = true,
   headline = 'El Impulso Financiero que tu Empresa Necesita,',
   highlight = 'Ahora más Simple que Nunca.',
@@ -19,12 +20,19 @@ export default function HeroKit({
   gradientFrom = 'from-brand-primary',
   gradientTo = 'to-brand-secondary',
   primaryCta = { label: 'Inicia tu Solicitud Ahora', to: '/solicitud', icon: true },
-  secondaryCta = { label: 'Conocer Beneficios', href: '#features' },
+  secondaryCta = { label: 'Conocer Beneficios', href: '#beneficios' },
   showGridBackground = true,
   showDefaultContent = true,
   className = '',
   children,
 }) {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+  const base = isHome ? '' : '/';
+  const secondaryTo = secondaryCta?.href
+    ? (secondaryCta.href.startsWith('#') ? `${base}${secondaryCta.href}` : secondaryCta.href)
+    : undefined;
+
   return (
     <section id={id} className={`relative min-h-screen flex items-center justify-center overflow-hidden pt-24 md:pt-32 ${className}`}>
       {/* Background Effects */}
@@ -92,13 +100,13 @@ export default function HeroKit({
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
               <Button size="lg" asChild className="bg-gradient-to-r from-brand-primary to-brand-secondary text-white hover:opacity-90 shadow-lg shadow-blue-500/30">
-                <Link to={primaryCta.to}>
+                <RouterLink to={primaryCta.to}>
                   {primaryCta.icon && <TrendingUp className="w-4 h-4 mr-2" />}
                   {primaryCta.label}
-                </Link>
+                </RouterLink>
               </Button>
               <Button size="lg" variant="outline" asChild className="text-black dark:text-white border-black dark:border-white hover:bg-black/5 dark:hover:bg-white/10">
-                <a href={secondaryCta.href}>{secondaryCta.label}</a>
+                <Link to={secondaryTo}>{secondaryCta.label}</Link>
               </Button>
             </motion.div>
           </div>

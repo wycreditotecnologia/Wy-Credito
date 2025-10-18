@@ -1,9 +1,9 @@
 -- =====================================================
--- EJECUTAR_EN_SUPABASE.sql
--- Consolidado: Empresas, Garantías, Referencias y Vistas
--- Ejecutar este archivo en el SQL Editor de Supabase.
--- Requisitos: La tabla `public.solicitudes` debe existir (ver database/setup_database.sql).
--- Idempotente: usa IF NOT EXISTS / DROP IF EXISTS para minimizar conflictos.
+-- EJECUTAR_EN_SUPABASE_v2.sql
+-- Maestro idempotente: Empresas, Garantías, Referencias, Vistas y CHECKs
+-- Ejecutar este archivo en el SQL Editor de la MISMA instancia de Supabase
+-- que usa la aplicación (variables VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).
+-- Requisito: Debe existir `public.solicitudes` (ver database/setup_database.sql).
 -- =====================================================
 
 -- =====================================================
@@ -12,7 +12,8 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =====================================================
--- 1) CREATE TABLE IF NOT EXISTS empresas
+-- 1) CREATE TABLE IF NOT EXISTS empresas (completa)
+--    Incluye TODAS las columnas usadas por el orquestador.
 --    + Índices, trigger updated_at y políticas RLS
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.empresas (
@@ -29,7 +30,28 @@ CREATE TABLE IF NOT EXISTS public.empresas (
     telefono_empresa TEXT,
     direccion_empresa TEXT,
     ciudad TEXT,
-    departamento TEXT
+    departamento TEXT,
+
+    -- Representante legal (según orquestador)
+    nombre_representante_legal TEXT,
+    documento_representante_legal TEXT,
+    celular_representante_legal TEXT,
+
+    -- Campos adicionales de negocio
+    redes_sociales JSONB,
+    proposito_recursos TEXT,
+    adquisicion_activos_fijos BOOLEAN DEFAULT FALSE,
+    detalle_activos_fijos TEXT,
+
+    -- Referencias (compatibilidad con flujo actual del orquestador)
+    nombre_referencia_1 TEXT,
+    telefono_referencia_1 TEXT,
+    nombre_referencia_2 TEXT,
+    telefono_referencia_2 TEXT,
+    nombre_referencia_3 TEXT,
+    telefono_referencia_3 TEXT,
+    nombre_referencia_4 TEXT,
+    telefono_referencia_4 TEXT
 );
 
 -- Índices
@@ -37,7 +59,7 @@ CREATE INDEX IF NOT EXISTS idx_empresas_solicitud_id ON public.empresas(solicitu
 CREATE INDEX IF NOT EXISTS idx_empresas_nit ON public.empresas(nit);
 CREATE INDEX IF NOT EXISTS idx_empresas_razon_social ON public.empresas(razon_social);
 
--- Trigger y función updated_at
+-- Trigger y función updated_at (idempotente)
 CREATE OR REPLACE FUNCTION public.actualizar_updated_at_empresas()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -52,7 +74,7 @@ CREATE TRIGGER trigger_actualizar_updated_at_empresas
     FOR EACH ROW
     EXECUTE FUNCTION public.actualizar_updated_at_empresas();
 
--- RLS y políticas (desarrollo)
+-- RLS y políticas (desarrollo; idempotentes)
 ALTER TABLE public.empresas ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Acceso público a empresas" ON public.empresas;
 CREATE POLICY "Acceso público a empresas"
@@ -61,17 +83,24 @@ CREATE POLICY "Acceso público a empresas"
     WITH CHECK (true);
 
 -- Comentarios
-COMMENT ON TABLE public.empresas IS 'Tabla para información de empresas, vinculada a solicitudes';
+COMMENT ON TABLE public.empresas IS 'Tabla para información de empresas vinculada a solicitudes (maestro v2)';
 COMMENT ON COLUMN public.empresas.solicitud_id IS 'FK a solicitudes.id';
 COMMENT ON COLUMN public.empresas.nit IS 'Número de Identificación Tributaria';
 COMMENT ON COLUMN public.empresas.razon_social IS 'Razón social';
 COMMENT ON COLUMN public.empresas.tipo_empresa IS 'Tipo de empresa (SAS, LTDA, SA, etc.)';
+COMMENT ON COLUMN public.empresas.redes_sociales IS 'JSON con enlaces: web, LinkedIn, Facebook, Instagram, etc.';
+COMMENT ON COLUMN public.empresas.proposito_recursos IS 'Propósito del uso de recursos del crédito';
+COMMENT ON COLUMN public.empresas.adquisicion_activos_fijos IS 'Si contempla adquisición de activos fijos';
+COMMENT ON COLUMN public.empresas.detalle_activos_fijos IS 'Detalle de los activos fijos a adquirir';
 
 -- =====================================================
--- 1A) COMPATIBILIDAD: asegurar columnas base si la tabla ya existía sin ellas
+-- 1A) COMPATIBILIDAD: asegurar columnas si la tabla ya existía sin ellas
 --     (evita errores 42703: columna no existe)
 -- =====================================================
 ALTER TABLE public.empresas
+    ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
     ADD COLUMN IF NOT EXISTS nit TEXT,
     ADD COLUMN IF NOT EXISTS razon_social TEXT,
     ADD COLUMN IF NOT EXISTS tipo_empresa TEXT,
@@ -79,21 +108,29 @@ ALTER TABLE public.empresas
     ADD COLUMN IF NOT EXISTS telefono_empresa TEXT,
     ADD COLUMN IF NOT EXISTS direccion_empresa TEXT,
     ADD COLUMN IF NOT EXISTS ciudad TEXT,
-    ADD COLUMN IF NOT EXISTS departamento TEXT;
+    ADD COLUMN IF NOT EXISTS departamento TEXT,
 
--- =====================================================
--- 2) ALTER TABLE empresas: nuevas columnas requeridas
---    redes_sociales, proposito_recursos, adquisicion_activos_fijos, detalle_activos_fijos
--- =====================================================
-ALTER TABLE public.empresas
+    ADD COLUMN IF NOT EXISTS nombre_representante_legal TEXT,
+    ADD COLUMN IF NOT EXISTS documento_representante_legal TEXT,
+    ADD COLUMN IF NOT EXISTS celular_representante_legal TEXT,
+
     ADD COLUMN IF NOT EXISTS redes_sociales JSONB,
     ADD COLUMN IF NOT EXISTS proposito_recursos TEXT,
     ADD COLUMN IF NOT EXISTS adquisicion_activos_fijos BOOLEAN DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS detalle_activos_fijos TEXT;
+    ADD COLUMN IF NOT EXISTS detalle_activos_fijos TEXT,
+
+    ADD COLUMN IF NOT EXISTS nombre_referencia_1 TEXT,
+    ADD COLUMN IF NOT EXISTS telefono_referencia_1 TEXT,
+    ADD COLUMN IF NOT EXISTS nombre_referencia_2 TEXT,
+    ADD COLUMN IF NOT EXISTS telefono_referencia_2 TEXT,
+    ADD COLUMN IF NOT EXISTS nombre_referencia_3 TEXT,
+    ADD COLUMN IF NOT EXISTS telefono_referencia_3 TEXT,
+    ADD COLUMN IF NOT EXISTS nombre_referencia_4 TEXT,
+    ADD COLUMN IF NOT EXISTS telefono_referencia_4 TEXT;
 
 -- =====================================================
--- 3) CREATE TABLE IF NOT EXISTS garantias (múltiples por empresa)
---    + Índice y RLS
+-- 2) CREATE TABLE IF NOT EXISTS garantias (múltiples por empresa)
+--    + Índice y RLS + compatibilidad
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.garantias (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -118,7 +155,7 @@ ALTER TABLE public.garantias
     ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
 -- =====================================================
--- 4) CREATE TABLE IF NOT EXISTS referencias_comerciales (múltiples por empresa)
+-- 3) CREATE TABLE IF NOT EXISTS referencias_comerciales (múltiples por empresa)
 --    + Índice y RLS
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.referencias_comerciales (
@@ -139,8 +176,8 @@ CREATE POLICY "Acceso público a referencias_comerciales"
     WITH CHECK (true);
 
 -- =====================================================
--- 5) Ajuste recomendado: CHECK para documentos.tipo_documento (robustez)
---    Evita duplicar si ya existe el constraint.
+-- 4) CHECK recomendado para documentos.tipo_documento (robustez)
+--    Idempotente: crea el constraint solo si no existe.
 -- =====================================================
 DO $$
 BEGIN
@@ -167,8 +204,8 @@ BEGIN
 END $$;
 
 -- =====================================================
--- 6) Vista útil: vista_empresas_completa
---    Agrega conteos de garantías y referencias, más tipos de documentos.
+-- 5) Vista útil: vista_empresas_completa (idempotente con CREATE OR REPLACE)
+--    Incluye conteos y tipos de documentos relacionados.
 -- =====================================================
 CREATE OR REPLACE VIEW public.vista_empresas_completa AS
 SELECT
@@ -184,8 +221,8 @@ LEFT JOIN public.referencias_comerciales r ON r.empresa_id = e.id
 GROUP BY e.id;
 
 -- =====================================================
--- 7) (Opcional) Migración de referencias JSONB -> tabla normalizada
---    Descomentarlo y ejecutar si deseas migrar datos existentes.
+-- 6) (Opcional) Migración referencias JSONB -> tabla normalizada
+--    Ejecutar si existen datos previos en solicitudes.referencias
 -- =====================================================
 /*
 INSERT INTO public.referencias_comerciales (empresa_id, nombre, contacto)
@@ -197,6 +234,6 @@ WHERE s.referencias IS NOT NULL;
 */
 
 -- =====================================================
--- FIN DEL SCRIPT
--- Ejecutar completo para crear/actualizar tablas y vista.
+-- FIN DEL SCRIPT v2
+-- Ejecutar completo para crear/actualizar tablas, RLS, triggers y vista.
 -- =====================================================

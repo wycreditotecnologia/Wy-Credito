@@ -80,6 +80,48 @@ const FormularioEmpresa = ({ onStepComplete, sessionId, registerStepActions, hid
     nitRef.current?.focus();
   }, []);
 
+  // Utilidad: calcular DV del NIT (módulo 11 - DIAN)
+  const calcularDVNIT = (nitBase) => {
+    const pesos = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+    const limpio = String(nitBase || '').replace(/\D/g, '');
+    let suma = 0;
+    for (let i = 0; i < limpio.length && i < pesos.length; i++) {
+      const dig = parseInt(limpio.charAt(limpio.length - 1 - i), 10) || 0;
+      suma += dig * pesos[i];
+    }
+    const resto = suma % 11;
+    return resto > 1 ? 11 - resto : resto; // 0 si resto 0, 1 si resto 1
+  };
+
+  const formatearNitConDVSiAplica = (valor) => {
+    const limpio = String(valor || '').replace(/\D/g, '');
+    if (/^\d{9,10}$/.test(limpio)) {
+      const dv = calcularDVNIT(limpio);
+      return `${limpio}-${dv}`;
+    }
+    return String(valor || '');
+  };
+
+  // Prefill desde extracción automática (si existe) y completar DV si falta
+  useEffect(() => {
+    try {
+      const preNit = localStorage.getItem(`pre_nit_${sessionId}`) || '';
+      const preRazon = localStorage.getItem(`pre_razon_social_${sessionId}`) || '';
+      const nitPref = (prevNit) => {
+        if (prevNit) return prevNit; // respetar si ya hay NIT
+        if (!preNit) return '';
+        // si viene sin guion, completar DV si la longitud es válida
+        if (!preNit.includes('-')) return formatearNitConDVSiAplica(preNit);
+        return preNit;
+      };
+      setFormData(prev => ({
+        ...prev,
+        nit: nitPref(prev.nit),
+        razonSocial: prev.razonSocial || preRazon,
+      }));
+    } catch {}
+  }, [sessionId]);
+
   // Opciones para tipo de empresa
   const tiposEmpresa = [
     { value: 'sas', label: 'Sociedad por Acciones Simplificada (SAS)' },
@@ -348,20 +390,30 @@ const FormularioEmpresa = ({ onStepComplete, sessionId, registerStepActions, hid
                 <Label htmlFor="nit">NIT de la Empresa</Label>
                 <div className="relative">
                   <BusinessIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="nit"
-                    value={formData.nit}
-                    onChange={(e) => handleInputChange('nit', e.target.value)}
-                    placeholder="123456789"
-                    ref={nitRef}
-                    onKeyDown={(e) => handleKeyDown(e, 0)}
-                    className="pl-9"
-                  />
+                <Input
+                  id="nit"
+                  value={formData.nit}
+                  onChange={(e) => handleInputChange('nit', e.target.value)}
+                  onBlur={() => {
+                    const val = String(formData.nit || '');
+                    if (val && !val.includes('-')) {
+                      const conDv = formatearNitConDVSiAplica(val);
+                      if (conDv !== val) {
+                        setFormData(prev => ({ ...prev, nit: conDv }));
+                        if (errors.nit) setErrors(prev => ({ ...prev, nit: '' }));
+                      }
+                    }
+                  }}
+                  placeholder="123456789"
+                  ref={nitRef}
+                  onKeyDown={(e) => handleKeyDown(e, 0)}
+                  className="pl-9"
+                />
                 </div>
                 {errors.nit ? (
                   <p className="text-xs text-destructive mt-1">{errors.nit}</p>
                 ) : (
-                  <p className="text-xs text-muted-foreground mt-1">Formato: 9016859886-0 (incluya el guion y el dígito de verificación)</p>
+                  <p className="text-xs text-muted-foreground mt-1">Formato: 9016859886-0. Si ingresa solo números, calculamos el dígito automáticamente.</p>
                 )}
               </div>
             </div>

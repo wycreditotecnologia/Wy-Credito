@@ -1,13 +1,5 @@
-import React from 'react';
-
-export const CookieConsentBanner = () => {
-  return (
-    <div>
-      {/* El contenido y la lógica del banner se añadirán en el siguiente paso. */}
-    </div>
-  );
-};
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -39,9 +31,9 @@ export const CookieConsentBanner = () => {
       <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
         <p className="text-sm text-muted-foreground flex-grow">
           Utilizamos cookies para mejorar tu experiencia. Al continuar, aceptas nuestra{' '}
-          <a href="/politica-de-cookies" className="underline hover:text-primary">
+          <Link to="/politica-de-cookies" className="underline hover:text-primary">
             Política de Cookies
-          </a>.
+          </Link>.
         </p>
         <Button onClick={handleAccept} className="w-full md:w-auto flex-shrink-0">
           Aceptar
