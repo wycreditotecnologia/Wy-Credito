@@ -1,12 +1,16 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import CompactFooter from '../components/Layout/CompactFooter';
 
 // Asumimos que el componente del formulario se llama 'ApplicationView.jsx'
 // y lo crearemos en la carpeta 'src/views/'.
 import ApplicationView from '../views/ApplicationView';
 import StepHeader from '@/components/StepHeader';
 import ProgressBar from '@/components/ProgressBar';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { Button } from '@/components/ui/button';
+
 // Eliminado StepNavigation: los controles flotantes ya no son necesarios
 
 // --- Cliente del Orquestador en backend (Vercel function) ---
@@ -99,33 +103,42 @@ const MainLayout = () => {
 
   // Cuando la sesión está lista, renderizamos el layout con header blanco y contenido centrado.
   return (
-    <div className="min-h-screen w-full bg-white text-gray-900 flex flex-col overflow-x-hidden">
-      {/* Header superior con marca y stepper */}
-      <header className="bg-white pt-3 sm:pt-4">
-        <div className="w-full px-2 sm:px-4 md:px-6 h-[75px] flex items-center justify-center sm:justify-between">
-          <div className="sm:hidden flex items-center text-gray-900 font-semibold" aria-live="polite">
-            <span className="text-xs text-gray-800">{currentStep} de {steps.length}</span>
-            <span className="ml-2 text-xs text-gray-600">{steps[currentStep - 1]?.label}</span>
-          </div>
-          <div className="hidden sm:block w-full max-w-full">
+    <div className="flex flex-col min-h-screen">
+      <header className="sticky top-0 z-50 bg-white/90 dark:bg-black/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-[75px]">
+        <div className="w-full px-0 h-[75px] flex items-center justify-between">
+          {/* Izquierda: Logo Wy Credito */}
+          <RouterLink to="/" className="flex items-center gap-2">
+            <div className="w-9 h-9 flex items-center justify-center">
+              <img src="/assets/Logo Icono Wy.svg" alt="Wy Credito Logo" className="w-full h-full" />
+            </div>
+            <span className="font-bold text-black dark:text-white text-xl">Wy Credito</span>
+          </RouterLink>
+
+          {/* Centro: Progreso y pasos (solo en pantallas sm+) */}
+          <div className="hidden sm:flex flex-1 px-[50px] max-w-full flex-col justify-center">
             <StepHeader
               stepNumber={currentStep}
               stepTitle={steps[currentStep - 1]?.label || ''}
               currentQuestion={stepProgress.currentQuestion}
               totalQuestions={stepProgress.totalQuestions}
+              className="flex-1"
             />
             <div className="pt-2">
-              <ProgressBar progress={totalProgress} />
+              <ProgressBar progress={totalProgress} className="flex-1" />
             </div>
           </div>
-          <div className="hidden sm:flex items-center ml-4">
-            <button
+
+          {/* Derecha: Tema y acción */}
+          <div className="flex items-center ml-4 gap-2">
+            <ThemeToggle />
+            <Button
+              size="sm"
               onClick={handleLogout}
-              className="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-100"
+              className="bg-brand-blue hover:bg-blue-600 text-white"
               aria-label="Cerrar Sesión"
             >
               Cerrar Sesión
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -139,6 +152,7 @@ const MainLayout = () => {
           onProgressUpdate={setStepProgress}
         />
       </main>
+      <CompactFooter />
     </div>
   );
 };

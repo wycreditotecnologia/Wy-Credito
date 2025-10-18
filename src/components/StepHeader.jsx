@@ -6,9 +6,10 @@ const StepHeader = ({
   stepTitle = "Consentimiento y Contacto", 
   currentQuestion = 1, 
   totalQuestions = 3, 
+  className = "",
 }) => { 
   return ( 
-    <div className="flex items-center justify-center space-x-4 w-full"> 
+    <div className={`flex items-center justify-center space-x-4 w-full ${className}`}> 
       {/* Círculo Azul con Número de Paso */} 
       <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-[#3A85F5] text-white rounded-full font-bold text-sm"> 
         {stepNumber} 
