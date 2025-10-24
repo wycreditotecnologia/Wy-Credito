@@ -51,45 +51,41 @@ const LoginPage = () => {
     }
     try {
       setLoading(true);
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // Cambiamos a Magic Link con creación de usuario para garantizar envío de email
+      const { data, error: otpError } = await supabase.auth.signInWithOtp({
         email,
-        password,
         options: {
           emailRedirectTo: `${BASE_URL}/login`,
+          shouldCreateUser: true,
           data: {
             full_name: fullName || '',
             phone: phone || ''
           }
         }
       });
-      if (signUpError) {
-        setError(signUpError.message);
+      if (otpError) {
+        setError(otpError.message);
         return;
       }
-      if (!data?.session) {
+      // Si está desactivado el correo propio, nos apoyamos en Supabase (Magic Link)
+      const shouldUseResend = appConfig.useResendAuth === true;
+      if (shouldUseResend) {
         try {
-          const shouldUseResend = appConfig.useResendAuth === true;
-          if (shouldUseResend) {
-            await fetch('/api/send-auth-confirmation', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email,
-                fullName,
-                redirectTo: `${BASE_URL}/login`
-              }),
-            });
-          }
+          await fetch('/api/send-auth-confirmation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              fullName,
+              redirectTo: `${BASE_URL}/login`
+            }),
+          });
         } catch (e) {
-          // No romper UX si el envío falla; mantenemos el aviso
           console.warn('Fallo al enviar email de confirmación propio:', e?.message || e);
         }
-        setMessage('Registro enviado. Revisa tu correo para confirmar la cuenta.');
-        setMessageType('info');
-      } else {
-        setMessage('Registro exitoso. Redirigiendo...');
-        setMessageType('success');
       }
+      setMessage('Te enviamos un enlace a tu email para activar tu cuenta.');
+      setMessageType('success');
     } catch (err) {
       setError('Error registrando usuario. ' + (err?.message || ''));
     } finally {
