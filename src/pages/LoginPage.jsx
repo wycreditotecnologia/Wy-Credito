@@ -49,25 +49,29 @@ const LoginPage = () => {
       setError('Email y contraseña son obligatorios.');
       return;
     }
+    if (!fullName || !phone) {
+      setError('Nombre y teléfono son obligatorios.');
+      return;
+    }
     try {
       setLoading(true);
-      // Cambiamos a Magic Link con creación de usuario para garantizar envío de email
-      const { data, error: otpError } = await supabase.auth.signInWithOtp({
+      // Revertimos al flujo original: signUp con contraseña y metadatos
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
+        password,
         options: {
           emailRedirectTo: `${BASE_URL}/login`,
-          shouldCreateUser: true,
           data: {
-            full_name: fullName || '',
-            phone: phone || ''
+            full_name: fullName,
+            phone: phone
           }
         }
       });
-      if (otpError) {
-        setError(otpError.message);
+      if (signUpError) {
+        setError(signUpError.message);
         return;
       }
-      // Si está desactivado el correo propio, nos apoyamos en Supabase (Magic Link)
+      // Correo de confirmación propio (opcional)
       const shouldUseResend = appConfig.useResendAuth === true;
       if (shouldUseResend) {
         try {
@@ -84,8 +88,8 @@ const LoginPage = () => {
           console.warn('Fallo al enviar email de confirmación propio:', e?.message || e);
         }
       }
-      setMessage('Te enviamos un enlace a tu email para activar tu cuenta.');
-      setMessageType('success');
+      setMessageType('info');
+      setMessage('Hemos enviado un enlace de confirmación a tu correo para activar tu cuenta.');
     } catch (err) {
       setError('Error registrando usuario. ' + (err?.message || ''));
     } finally {
@@ -175,6 +179,26 @@ const LoginPage = () => {
 
             {mode === 'register' && (
             <form onSubmit={handleRegister} className="space-y-3">
+              <div>
+                <Label className="mb-1 text-slate-700">Nombre completo</Label>
+                <Input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Tu nombre completo"
+                  required
+                />
+              </div>
+              <div>
+                <Label className="mb-1 text-slate-700">Teléfono</Label>
+                <Input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="300 123 4567"
+                  required
+                />
+              </div>
               <div>
                 <Label className="mb-1 text-slate-700">Email</Label>
                 <Input
