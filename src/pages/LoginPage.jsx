@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Header from './landing/Header';
 import HeroKit from '@/components/ui/kits/HeroKit.jsx';
 import CompactFooter from '@/components/Layout/CompactFooter.jsx';
+import { appConfig } from '@/config';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ const LoginPage = () => {
   const [messageType, setMessageType] = useState(null);
   const [error, setError] = useState('');
   const [mode, setMode] = useState('register'); // 'login' | 'register'
+
+  const BASE_URL = appConfig?.baseUrl || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -52,6 +55,7 @@ const LoginPage = () => {
         email,
         password,
         options: {
+          emailRedirectTo: `${BASE_URL}/login`,
           data: {
             full_name: fullName || '',
             phone: phone || ''
@@ -63,6 +67,23 @@ const LoginPage = () => {
         return;
       }
       if (!data?.session) {
+        try {
+          const shouldUseResend = appConfig.useResendAuth === true;
+          if (shouldUseResend) {
+            await fetch('/api/send-auth-confirmation', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email,
+                fullName,
+                redirectTo: `${BASE_URL}/login`
+              }),
+            });
+          }
+        } catch (e) {
+          // No romper UX si el envío falla; mantenemos el aviso
+          console.warn('Fallo al enviar email de confirmación propio:', e?.message || e);
+        }
         setMessage('Registro enviado. Revisa tu correo para confirmar la cuenta.');
         setMessageType('info');
       } else {
@@ -110,7 +131,7 @@ const LoginPage = () => {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/solicitud` : 'http://localhost:3002/solicitud'
+          redirectTo: `${BASE_URL}/solicitud`
         }
       });
     } catch (err) {
@@ -126,7 +147,7 @@ const LoginPage = () => {
         highlight="de forma simple y segura."
         subtitle="Inicia sesión con tu correo y contraseña o regístrate para empezar tu solicitud."
         primaryCta={{ label: 'Ir a Solicitud', to: '/solicitud', icon: true }}
-            secondaryCta={{ label: 'Conocer Beneficios', href: '#beneficios' }}
+        secondaryCta={{ label: 'Conocer Beneficios', href: '#beneficios' }}
         showDefaultContent={false}
       >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -178,33 +199,16 @@ const LoginPage = () => {
                   required
                 />
               </div>
-              <div>
-                <Label className="mb-1 text-slate-700">Nombre Completo</Label>
-                <Input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Nombre y Apellidos"
-                />
-              </div>
-              <div>
-                <Label className="mb-1 text-slate-700">Teléfono de Contacto</Label>
-                <Input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="3001234567"
-                />
-              </div>
-              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <div className="flex items-center space-x-2">
                 <input
+                  id="acepto_politicas"
                   type="checkbox"
                   checked={accepted}
                   onChange={(e) => setAccepted(e.target.checked)}
                   className="accent-brand"
                 />
                 Acepto las políticas de tratamiento de datos
-              </label>
+              </div>
             {error && <p className="text-red-600 text-sm">{error}</p>}
             {messageType === 'info' && (
               <Alert className="bg-white border border-slate-200 text-slate-900">

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { supabaseConfig } from '@/config';
 
 // Variables de entorno (cliente) - usar solo anon key
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -35,8 +36,8 @@ if ((!supabaseUrl || !supabaseAnonKey) && import.meta.env.DEV) {
   console.error('[PROD] Faltan variables VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY. Autenticación deshabilitada hasta configurar variables.');
   supabase = createMockClient('PROD');
 } else {
-  // Crear cliente real con las credenciales disponibles
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  // Crear cliente real con las credenciales disponibles y opciones centralizadas
+  supabase = createClient(supabaseUrl, supabaseAnonKey, supabaseConfig.options);
 }
 
 export { supabase };

@@ -158,22 +158,118 @@ const devOrchestratorApi = {
               'declaracion_veracidad',
               'declaracion_origen_fondos',
               'referencias',
+              'redes_sociales',
+              // Compat con esquema remoto
+              'lugar_constitucion',
+              'tipo_denominacion',
+              'es_startup',
             ])
-            const updates = {}
+            const empresaKeys = new Set([
+              'nit',
+              'razon_social',
+              'tipo_empresa',
+              'sitio_web',
+              'telefono_empresa',
+              'direccion_empresa',
+              'ciudad',
+              'departamento',
+              'redes_sociales',
+              // Compat con esquema remoto
+              'lugar_constitucion',
+              'tipo_denominacion',
+              'es_startup',
+            ])
+            const empresaUpdates = {}
+            const solicitudUpdates = {}
             if (stepData && typeof stepData === 'object') {
               for (const [k, v] of Object.entries(stepData)) {
-                if (allowed.has(k)) updates[k] = v
+                if (!allowed.has(k)) continue
+                if (empresaKeys.has(k)) empresaUpdates[k] = v
+                else solicitudUpdates[k] = v
               }
             }
-            if (Object.keys(updates).length === 0) {
+            if (Object.keys(empresaUpdates).length === 0 && Object.keys(solicitudUpdates).length === 0) {
               respond({ ok: true, message: 'Sin cambios aplicables', nextStep: payload?.nextStep ?? null })
               return
             }
-            const { error } = await supabase.from('solicitudes').update(updates).eq('id', sessionId)
-            if (error) {
-              res.statusCode = 500
-              res.end(JSON.stringify({ ok: false, error: error.message }))
-              return
+            // Actualizar/insertar datos de empresa vinculada a la solicitud
+            if (Object.keys(empresaUpdates).length > 0) {
+              let empresaId = null
+              const { data: emp, error: empFindErr } = await supabase
+                .from('empresas')
+                .select('id')
+                .eq('solicitud_id', sessionId)
+                .single()
+              if (empFindErr && empFindErr.code !== 'PGRST116') {
+                res.statusCode = 500
+                res.end(JSON.stringify({ ok: false, error: empFindErr.message }))
+                return
+              }
+              if (emp && emp.id) {
+                empresaId = emp.id
+                const { error: updateEmpErr } = await supabase
+                  .from('empresas')
+                  .update(empresaUpdates)
+                  .eq('id', empresaId)
+                if (updateEmpErr) {
+                  res.statusCode = 500
+                  res.end(JSON.stringify({ ok: false, error: updateEmpErr.message }))
+                  return
+                }
+              } else {
+                const insertPayload = { solicitud_id: sessionId, ...empresaUpdates }
+                if (!('tipo_denominacion' in insertPayload)) {
+                  const tipo = insertPayload.tipo_empresa || null
+                  const map = {
+                    sas: 'SAS',
+                    sa: 'SA',
+                    ltda: 'LTDA',
+                    colectiva: 'COLECTIVA',
+                    comandita_simple: 'SC',
+                    comandita_acciones: 'SCA',
+                    empresa_unipersonal: 'EU',
+                    persona_natural: 'PN'
+                  }
+                  insertPayload.tipo_denominacion = (tipo && map[String(tipo).toLowerCase()]) || 'SAS'
+                }
+                if (!('lugar_constitucion' in insertPayload)) {
+                  insertPayload.lugar_constitucion = insertPayload.ciudad || 'Bogotá D.C.'
+                }
+                if (!('es_startup' in insertPayload)) {
+                  insertPayload.es_startup = false
+                }
+                const { error: insertEmpErr } = await supabase
+                  .from('empresas')
+                  .insert(insertPayload)
+                if (insertEmpErr) {
+                  res.statusCode = 500
+                  res.end(JSON.stringify({ ok: false, error: insertEmpErr.message }))
+                  return
+                }
+                const { data: empLookup, error: empLookupErr } = await supabase
+                  .from('empresas')
+                  .select('id')
+                  .eq('solicitud_id', sessionId)
+                  .limit(1)
+                if (empLookupErr) {
+                  res.statusCode = 500
+                  res.end(JSON.stringify({ ok: false, error: empLookupErr.message }))
+                  return
+                }
+                empresaId = Array.isArray(empLookup) && empLookup.length > 0 ? empLookup[0].id : null
+              }
+            }
+            // Actualizar datos de la solicitud
+            if (Object.keys(solicitudUpdates).length > 0) {
+              const { error: solErr } = await supabase
+                .from('solicitudes')
+                .update(solicitudUpdates)
+                .eq('id', sessionId)
+              if (solErr) {
+                res.statusCode = 500
+                res.end(JSON.stringify({ ok: false, error: solErr.message }))
+                return
+              }
             }
             respond({ ok: true, nextStep: payload?.nextStep ?? null })
             return

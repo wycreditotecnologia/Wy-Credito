@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import PreguntaNIT from './PreguntaNIT';
 import PreguntaRazonSocial from './PreguntaRazonSocial';
+import PreguntaPerfilDigital from './PreguntaPerfilDigital';
 
 const StepEmpresa_Typeform = ({ onComplete, onProgressUpdate }) => {
   const [currentQuestion, setCurrentQuestion] = useState(1);
@@ -17,6 +18,8 @@ const StepEmpresa_Typeform = ({ onComplete, onProgressUpdate }) => {
     if (currentQuestion === 1) {
       setCurrentQuestion(2);
     } else if (currentQuestion === 2) {
+      setCurrentQuestion(3);
+    } else if (currentQuestion === 3) {
       onComplete(newData);
     }
   };
@@ -24,7 +27,7 @@ const StepEmpresa_Typeform = ({ onComplete, onProgressUpdate }) => {
   // Reportar progreso al montar y cuando cambie la pregunta
   useEffect(() => {
     if (typeof onProgressUpdate === 'function') {
-      onProgressUpdate({ currentQuestion, totalQuestions: 2 });
+      onProgressUpdate({ currentQuestion, totalQuestions: 3 });
     }
   }, [onProgressUpdate, currentQuestion]);
 
@@ -67,6 +70,9 @@ const StepEmpresa_Typeform = ({ onComplete, onProgressUpdate }) => {
           )}
           {currentQuestion === 2 && (
             <PreguntaRazonSocial onComplete={handleQuestionComplete} />
+          )}
+          {currentQuestion === 3 && (
+            <PreguntaPerfilDigital onComplete={handleQuestionComplete} />
           )}
         </motion.div>
       </AnimatePresence>

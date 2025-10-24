@@ -67,7 +67,7 @@ const supabaseConfig = {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false
+      detectSessionInUrl: true
     },
     realtime: {
       params: {
@@ -133,6 +133,7 @@ const appConfig = {
   
   // URLs y endpoints
   baseUrl: import.meta.env.VITE_BASE_URL || 'http://localhost:3000',
+  useResendAuth: import.meta.env.VITE_USE_RESEND_AUTH === 'true',
   apiTimeout: parseInt(import.meta.env.VITE_API_TIMEOUT) || 30000,
   
   // Configuración de logging
