@@ -23,7 +23,7 @@ export default function UiShowcase() {
       <HeroKit />
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight">Kits UI Wy Credito</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Kits UI Wy Crédito</h1>
           <p className="text-neutral-600 mt-2">Componentes oficiales reutilizables para la ruta /solicitud</p>
         </div>
 
@@ -71,7 +71,7 @@ export default function UiShowcase() {
         <div className="mt-10">
           <Card className="p-6 bg-white/90 backdrop-blur shadow-md">
             <h2 className="text-lg font-semibold">Kit Formulario de Registro</h2>
-            <p className="text-sm text-muted-foreground">Formulario de registro adaptado a Wy Credito, sin login social</p>
+            <p className="text-sm text-muted-foreground">Formulario de registro adaptado a Wy Crédito, sin login social</p>
             <div className="mt-4">
               <SignupFormDemo />
             </div>

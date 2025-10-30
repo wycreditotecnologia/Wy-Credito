@@ -14,7 +14,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
  */
 export default function HeaderKit({
   logoSrc = '/assets/Logo Icono Wy.svg',
-  brandName = 'Wy Credito',
+  brandName = 'Wy Crédito',
   navItems = [
     { label: 'Inicio', href: '#inicio' },
     { label: 'Cómo Funciona', href: '#como-funciona' },
@@ -72,7 +72,7 @@ export default function HeaderKit({
               }}
             >
               <div className={`flex items-center justify-center transition-all duration-500 ${isScrolled ? 'w-7 h-7' : 'w-10 h-10'}`}>
-                <img src={logoSrc} alt={`${brandName} Logo`} className="w-full h-full" />
+                <img src={logoSrc} alt={`${brandName} Logo`} className="h-full w-auto object-contain" />
               </div>
               <span className={`font-bold text-black dark:text-white transition-all duration-500 ${isScrolled ? 'text-lg' : 'text-2xl'}`}>
                 {brandName}

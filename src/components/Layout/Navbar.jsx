@@ -17,7 +17,7 @@ const Navbar = () => {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
           {/* Aquí irá nuestro logo. Por ahora, un texto. */}
-          <span className="text-xl font-bold text-white">Wy Credito</span>
+          <span className="text-xl font-bold text-white">Wy Crédito</span>
         </RouterLink>
         <nav className="hidden items-center gap-6 text-sm md:flex">
           <Link to={`${base}#simulador`} className="text-gray-300 hover:text-white transition-colors">Simulador</Link>

@@ -12,7 +12,7 @@ const Footer = () => {
     <footer className="bg-gray-950 border-t border-white/10 py-8">
       <div className="container mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
         <div>
-          <h3 className="text-lg font-bold text-white mb-2">Wy Credito</h3>
+          <h3 className="text-lg font-bold text-white mb-2">Wy Crédito</h3>
           <p className="text-gray-400">Financiación inteligente para el futuro de tu empresa. Bogotá, Colombia.</p>
         </div>
         <div>
@@ -35,7 +35,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="container mx-auto px-4 md:px-6 mt-8 text-center text-gray-500 text-xs">
-        &copy; {new Date().getFullYear()} Wy Credito. Derechos reservados. Diseño y Desarrollo por{" "}
+        &copy; {new Date().getFullYear()} Wy Crédito. Derechos reservados. Diseño y Desarrollo por{" "}
         <a
           href="https://krezco.digital"
           target="_blank"

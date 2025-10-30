@@ -61,7 +61,7 @@ export default function HeroSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg sm:text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto"
           >
-            En Wy Credito, transformamos el acceso a la financiación. Olvídate de la burocracia interminable y obtén el capital para crecer con un proceso 100% digital, ágil y transparente.
+            En Wy Crédito, transformamos el acceso a la financiación. Olvídate de la burocracia interminable y obtén el capital para crecer con un proceso 100% digital, ágil y transparente.
           </motion.p>
 
           {/* Action Buttons */}

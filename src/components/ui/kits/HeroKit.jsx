@@ -16,7 +16,7 @@ export default function HeroKit({
   showAIChip = true,
   headline = 'El Impulso Financiero que tu Empresa Necesita,',
   highlight = 'Ahora más Simple que Nunca.',
-  subtitle = 'En Wy Credito, transformamos el acceso a la financiación. Olvídate de la burocracia interminable y obtén el capital para crecer con un proceso 100% digital, ágil y transparente.',
+  subtitle = 'En Wy Crédito, transformamos el acceso a la financiación. Olvídate de la burocracia interminable y obtén el capital para crecer con un proceso 100% digital, ágil y transparente.',
   gradientFrom = 'from-brand-primary',
   gradientTo = 'to-brand-secondary',
   primaryCta = { label: 'Inicia tu Solicitud Ahora', to: '/solicitud', icon: true },

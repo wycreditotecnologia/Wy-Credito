@@ -307,7 +307,9 @@ const devOrchestratorApi = {
   },
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  // Use relative base for production builds (GitHub Pages subpath friendly)
+  base: command === 'build' ? './' : '/',
   plugins: [react(), devOrchestratorApi],
   resolve: {
     alias: {
@@ -321,4 +323,4 @@ export default defineConfig({
       overlay: false
     }
   }
-})
+}))

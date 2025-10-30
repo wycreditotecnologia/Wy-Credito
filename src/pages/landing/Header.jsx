@@ -46,10 +46,10 @@ export default function Header() {
               }}
             >
               <div className={`flex items-center justify-center transition-all duration-500 ${isScrolled ? 'w-7 h-7' : 'w-10 h-10'}`}>
-                <img src="/assets/Logo Icono Wy.svg" alt="Wy Credito Logo" className="w-full h-full" />
+                <img src="/assets/Logo Icono Wy.svg" alt="Wy Crédito Logo" className="h-full w-auto object-contain" />
               </div>
               <span className={`font-bold text-black dark:text-white transition-all duration-500 ${isScrolled ? 'text-lg' : 'text-2xl'}`}>
-                Wy Credito
+                Wy Crédito
               </span>
             </RouterLink>
 

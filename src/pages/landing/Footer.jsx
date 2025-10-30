@@ -21,10 +21,10 @@ export default function Footer() {
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
               <div className="w-10 h-10 flex items-center justify-center">
-                <img src="/assets/Logo Icono Wy.svg" alt="Wy Credito Logo" className="w-full h-full" />
+                <img src="/assets/Logo Icono Wy.svg" alt="Wy Crédito Logo" className="h-full w-auto object-contain" />
               </div>
               <span className="text-xl font-bold text-black dark:text-white">
-                Wy Credito
+                Wy Crédito
               </span>
             </RouterLink>
             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -78,7 +78,7 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-gray-200 dark:border-gray-800 text-center text-sm text-black dark:text-white">
           <p className="text-black dark:text-white">
-            © {new Date().getFullYear()} Wy Credito. Derechos reservados. Diseño y Desarrollo por{" "}
+            © {new Date().getFullYear()} Wy Crédito. Derechos reservados. Diseño y Desarrollo por{" "}
             <a
               href="https://krezco.digital"
               target="_blank"

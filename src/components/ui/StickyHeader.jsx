@@ -33,7 +33,7 @@ export default function StickyHeader() {
       <div className="flex items-center justify-between rounded-2xl border border-black/5 bg-white/60 px-4 py-2 backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/60">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary" />
-          <span className="font-semibold">Wy Credito</span>
+          <span className="font-semibold">Wy Crédito</span>
         </div>
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
           {nav.map((item) => (

@@ -109,9 +109,9 @@ const MainLayout = () => {
           {/* Izquierda: Logo Wy Credito */}
           <RouterLink to="/" className="flex items-center gap-2">
             <div className="w-9 h-9 flex items-center justify-center">
-              <img src="/assets/Logo Icono Wy.svg" alt="Wy Credito Logo" className="w-full h-full" />
+              <img src="/assets/Logo Icono Wy.svg" alt="Wy Crédito Logo" className="h-full w-auto object-contain" />
             </div>
-            <span className="font-bold text-black dark:text-white text-xl">Wy Credito</span>
+            <span className="font-bold text-black dark:text-white text-xl">Wy Crédito</span>
           </RouterLink>
 
           {/* Centro: Progreso y pasos (solo en pantallas sm+) */}

@@ -15,7 +15,7 @@ const SolicitudRecibidaEmail = ({
       <Preview>Confirmación de tu solicitud de crédito Wy</Preview>
       <Body style={{ backgroundColor: '#f5f7fa', fontFamily: 'Arial, sans-serif' }}>
         <Container style={{ margin: '0 auto', padding: '20px', backgroundColor: '#ffffff', border: '1px solid #eaeaea', borderRadius: '12px' }}>
-          <Heading style={{ color: '#3097CD', fontFamily: 'Segoe UI' }}>Wy Credito</Heading>
+          <Heading style={{ color: '#3097CD', fontFamily: 'Segoe UI' }}>Wy Crédito</Heading>
           <Text style={{ color: '#000000', fontFamily: 'Century Gothic Pro' }}>
             ¡Hola, {nombreSolicitante}!
           </Text>
