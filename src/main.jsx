@@ -9,13 +9,16 @@ import App from './App.jsx';
 import './index.css';
 import { ThemeProvider } from './components/providers/ThemeProvider.jsx';
 import { Toaster } from 'sonner';
+import { AuthProvider } from './contexts/AuthContext.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <App />
-        <Toaster richColors position="top-center" />
+        <AuthProvider>
+          <App />
+          <Toaster richColors position="top-center" />
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>

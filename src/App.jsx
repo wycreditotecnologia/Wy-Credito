@@ -14,6 +14,7 @@ import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage';
 import UiShowcase from './views/UiShowcase.jsx';
 import Seguimiento from './pages/Seguimiento.jsx';
 import HashScrollHandler from './components/providers/HashScrollHandler.jsx';
+import AuthCallbackPage from './pages/AuthCallbackPage';
 
 function App() {
   return (
@@ -31,6 +32,10 @@ function App() {
       
       {/* Login */}
       <Route path="/login" element={<LoginPage />} />
+
+      {/* --- RUTA DE CALLBACK DE AUTENTICACIÓN --- */}
+      {/* ESTA ES LA ÚNICA RUTA QUE DEBES AÑADIR */}
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
       {/* Ruta Dedicada y Aislada para nuestra aplicación de formulario protegida */}
       <Route
