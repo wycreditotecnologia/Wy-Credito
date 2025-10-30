@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const modelName = import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash-latest';
 
 let geminiModel;
 
@@ -16,7 +17,7 @@ if (!apiKey) {
   };
 } else {
   const genAI = new GoogleGenerativeAI(apiKey);
-  geminiModel = genAI.getGenerativeModel({ model: "gemini-pro" });
+  geminiModel = genAI.getGenerativeModel({ model: modelName });
 }
 
 export { geminiModel };

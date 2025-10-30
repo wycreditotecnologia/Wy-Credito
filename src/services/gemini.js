@@ -32,6 +32,9 @@ class GeminiService {
         });
         this.isInitialized = true;
         console.log('✅ Gemini API inicializada correctamente');
+      } else if (appConfig.useBackendGemini) {
+        console.warn('⚠️ Gemini API (frontend) no configurada - utilizando backend seguro');
+        this.isInitialized = true; // habilitar flujo vía backend
       } else {
         console.warn('⚠️ Gemini API no configurada - usando modo simulado');
         this.isInitialized = false;
@@ -49,21 +52,36 @@ class GeminiService {
    * @returns {Promise<string>} - La respuesta generada
    */
   async generateResponse(prompt, context = {}) {
-    if (!this.isInitialized || this.isDevMode) {
+    if (this.isDevMode) {
       return this.generateMockResponse(prompt, context);
     }
     
     try {
-      // Construir el prompt completo con contexto
-      const fullPrompt = this.buildPrompt(prompt, context);
-      
-      // Generar respuesta
-      const result = await this.model.generateContent(fullPrompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      // Validar y limpiar la respuesta
-      return this.validateAndCleanResponse(text);
+      if (appConfig.useBackendGemini) {
+        // Usar endpoint backend seguro
+        const resp = await fetch('/api/gemini-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, context })
+        });
+        if (!resp.ok) {
+          const errText = await resp.text().catch(() => '');
+          throw new Error(`Backend Gemini error (${resp.status}): ${errText}`);
+        }
+        const payload = await resp.json();
+        return this.validateAndCleanResponse(payload?.reply || '');
+      } else {
+        // Construir el prompt completo con contexto
+        const fullPrompt = this.buildPrompt(prompt, context);
+        
+        // Generar respuesta directa
+        const result = await this.model.generateContent(fullPrompt);
+        const response = await result.response;
+        const text = response.text();
+        
+        // Validar y limpiar la respuesta
+        return this.validateAndCleanResponse(text);
+      }
       
     } catch (error) {
       console.error('❌ Error al generar respuesta con Gemini:', error);

@@ -102,7 +102,7 @@ module.exports = async function handler(req, res) {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(apiKey);
 
-    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
     const model = genAI.getGenerativeModel({
       model: modelName,
       generationConfig: { responseMimeType: 'application/json' },

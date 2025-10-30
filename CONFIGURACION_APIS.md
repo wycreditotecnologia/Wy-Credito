@@ -67,7 +67,7 @@ npm run setup-supabase
 
    # Google Gemini Configuration
    VITE_GEMINI_API_KEY=tu-gemini-api-key-aqui
-   VITE_GEMINI_MODEL=gemini-1.5-flash
+   VITE_GEMINI_MODEL=gemini-1.5-flash-latest
 
    # Application Configuration
    VITE_APP_NAME=Wally - Wy Crédito

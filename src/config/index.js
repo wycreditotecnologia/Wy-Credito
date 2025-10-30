@@ -80,7 +80,7 @@ const supabaseConfig = {
 // Configuración de Google Gemini
 const geminiConfig = {
   apiKey: import.meta.env.VITE_GEMINI_API_KEY,
-  model: import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash',
+  model: import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash-latest',
   
   // Validación de configuración
   isValid() {
@@ -130,6 +130,7 @@ const appConfig = {
   version: import.meta.env.VITE_APP_VERSION || '1.0.0',
   environment: import.meta.env.MODE || 'development',
   devMode: import.meta.env.VITE_DEV_MODE === 'true',
+  useBackendGemini: import.meta.env.VITE_USE_BACKEND_GEMINI === 'true',
   
   // URLs y endpoints
   baseUrl: import.meta.env.VITE_BASE_URL || 'http://localhost:3000',
@@ -168,7 +169,9 @@ const validateConfiguration = () => {
   
   // Validar Gemini
   if (!geminiConfig.isValid()) {
-    if (appConfig.devMode) {
+    if (appConfig.useBackendGemini) {
+      warnings.push('Gemini API (frontend) no configurada - usando backend seguro');
+    } else if (appConfig.devMode) {
       warnings.push('Gemini API no configurada - usando respuestas simuladas');
     } else {
       errors.push('Gemini API debe estar configurada en producción');

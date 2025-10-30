@@ -27,10 +27,10 @@ async function testBasicConnection() {
   
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const modelClient = genAI.getGenerativeModel({ model });
     
     const prompt = "Responde solo con 'OK' si puedes procesar este mensaje";
-    const result = await model.generateContent(prompt);
+    const result = await modelClient.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     
@@ -48,7 +48,7 @@ async function testDocumentProcessing() {
   
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const modelClient = genAI.getGenerativeModel({ model });
     
     // Simular procesamiento de documento de identidad
     const prompt = `
@@ -72,7 +72,7 @@ Responde SOLO en formato JSON con esta estructura:
   "lugar_nacimiento": ""
 }`;
 
-    const result = await model.generateContent(prompt);
+    const result = await modelClient.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     
@@ -105,7 +105,7 @@ async function testConversationalAI() {
   
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const modelClient = genAI.getGenerativeModel({ model });
     
     const prompt = `
 Eres Wally, un asistente virtual especializado en créditos empresariales.
@@ -114,7 +114,7 @@ Responde de manera amigable y profesional a este saludo:
 
 Mantén tu respuesta breve (máximo 2 líneas) y menciona que puedes ayudar con el proceso.`;
 
-    const result = await model.generateContent(prompt);
+    const result = await modelClient.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     
@@ -132,9 +132,9 @@ async function testErrorHandling() {
   
   try {
     const genAI = new GoogleGenerativeAI('invalid-key');
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const modelClient = genAI.getGenerativeModel({ model });
     
-    const result = await model.generateContent('test');
+    const result = await modelClient.generateContent('test');
     console.log('❌ Error: debería haber fallado con API key inválida');
     return false;
   } catch (error) {

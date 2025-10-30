@@ -137,7 +137,7 @@ function validateGemini(env) {
   log('\n🤖 Validando configuración de Gemini API...', 'cyan');
   
   const apiKey = env.VITE_GEMINI_API_KEY;
-  const model = env.VITE_GEMINI_MODEL || 'gemini-1.5-flash';
+  const model = env.VITE_GEMINI_MODEL || 'gemini-1.5-flash-latest';
   
   let isValid = true;
   
