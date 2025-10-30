@@ -1,4 +1,91 @@
-# Documentación de Sesión de Trabajo - Wy Credito Landing Page
+<!-- Actualización: 2025-10-30 | Se agrega sesión técnica reciente, estructura estandarizada y referencias. -->
+# Documentación de Sesiones de Trabajo - Wy Crédito
+
+## Sesión: 2025-10-30
+
+**Proyecto:** Wy Crédito IA • Plataforma de Financiamiento Empresarial
+
+### Objetivos de la sesión
+- Blindar integración de IA moviendo conversación a backend (`api/gemini-chat.js`).
+- Unificar el modelo de Gemini a `gemini-1.5-flash-latest` y evitar hardcode.
+- Habilitar uso de backend desde el frontend (`VITE_USE_BACKEND_GEMINI=true`).
+- Revisar y ajustar `package.json` (scripts, compatibilidad Node, clean cross‑platform).
+- Crear documentación operativa de despliegue (`DEPLOY_CHECKLIST.md`) y diagramas de secuencia.
+
+### Participantes
+- Equipo Wy Crédito Tecnología (Frontend/Backend/DevOps).
+- Soporte técnico y documentación.
+
+### Puntos tratados
+- Endpoint seguro de chat: `POST /api/gemini-chat` con `GEMINI_API_KEY` en backend.
+- Fallback en `src/services/gemini.js` para usar backend si el frontend no tiene API key.
+- Config centralizada en `src/config/index.js` con flag `useBackendGemini` y modelo por defecto `-latest`.
+- Actualización de scripts y compatibilidad en `package.json` (Node `20.x || 22.x`, `rimraf`, verificación Gemini).
+- Dev local y deploy: `vite dev` para frontend y `vercel dev` para funciones `/api/*`.
+- Documentación de deploy y nuevos diagramas en `docs/diagrams/*`.
+
+### Acuerdos y acciones
+- Implementado `api/gemini-chat.js` y actualizado `api/gemini-extract.js` al modelo `-latest`.
+- Ajustado `src/services/gemini.js`, `src/lib/geminiClient.js` y `validate-config.js`.
+- Actualizado `package.json` (scripts: `verify:gemini`, `check:gemini-models`, `dev:vercel`, `clean` con `rimraf`).
+- Agregado `DEPLOY_CHECKLIST.md` y diagramas `gemini-chat-sequence.md`, `orchestrator-sequence.md`.
+- Verificado servidor de desarrollo: `http://localhost:3000/`.
+
+### Fechas y horarios
+- Fecha: 2025-10-30
+- Horario: 09:00–12:30 (hora local)
+
+### Próximos pasos
+- Validar disponibilidad de modelos en Google Cloud (`npm run check:gemini-models`).
+- Asegurar claves backend (Gemini, Supabase service role, Resend) solo en Vercel.
+- Añadir reintentos/logs estructurados a `api/*` y pruebas unitarias básicas.
+- Optimizar bundle y lazy‑load en vistas menos usadas.
+
+### Comandos y ejemplos
+- Desarrollo frontend: `npm run dev`
+- Desarrollo APIs local (Vercel CLI): `npm run dev:vercel`
+- Verificación Gemini: `npm run verify:gemini` y `npm run check:gemini-models`
+- Ejemplo de prueba API:
+  ```bash
+  curl -X POST https://<tu-url>/api/gemini-chat \
+    -H "Content-Type: application/json" \
+    -d '{"prompt":"Hola, prueba"}'
+  ```
+- Variables clave (backend proyecto Vercel):
+  ```env
+  GEMINI_API_KEY=********
+  GEMINI_MODEL=gemini-1.5-flash-latest
+  SUPABASE_URL=...
+  SUPABASE_ANON_KEY=...
+  SUPABASE_SERVICE_ROLE_KEY=...
+  RESEND_API_KEY=...
+  ```
+- Variables frontend (`.env`):
+  ```env
+  VITE_SUPABASE_URL=...
+  VITE_SUPABASE_ANON_KEY=...
+  VITE_USE_BACKEND_GEMINI=true
+  VITE_GEMINI_MODEL=gemini-1.5-flash-latest
+  ```
+
+---
+
+<!-- Historial: edición previa (Diciembre 2024) centrada en landing y pulido visual. -->
+## Historial de sesiones anteriores (Diciembre 2024 – Landing Page)
+
+Durante esa sesión se completó la Fase 4 (Pulido Visual y Refinamiento) de la landing page, con mejoras de UI (Aceternity UI), efectos de texto, botones interactivos y separadores de sección, manteniendo performance y consistencia de marca.
+
+Principales resultados:
+- Integración de `TextGenerateEffect` y `ShimmerButton`.
+- Componentes: `HeroSection`, `SectionSeparator`, y refinamientos en `LandingPage.jsx`.
+- Performance: animaciones fluidas y bundle optimizado.
+- Estado: servidor de desarrollo estable (`http://localhost:3000/`), HMR activo.
+
+> Nota: La documentación detallada de esta sesión se mantuvo en la versión anterior del archivo y está disponible en el historial del repositorio.
+
+---
+
+<!-- Fin de actualización 2025-10-30 -->
 
 **Fecha:** Diciembre 2024  
 **Proyecto:** Wy Credito - Plataforma de Financiamiento Empresarial  
