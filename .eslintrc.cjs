@@ -9,14 +9,28 @@ module.exports = {
     'eslint:recommended',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
-    'plugin:jsx-a11y/recommended',
-    'plugin:import/recommended',
     'prettier',
   ],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
+  overrides: [
+    {
+      files: ['**/*.ts', '**/*.tsx'],
+      parser: '@typescript-eslint/parser',
+      plugins: ['@typescript-eslint'],
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+      rules: {
+        // Delegar a TS
+        'no-undef': 'off',
+        '@typescript-eslint/no-unused-vars': 'warn',
+      },
+    },
+  ],
   settings: {
     react: {
       version: 'detect',
@@ -26,6 +40,7 @@ module.exports = {
     // Ajustes para reducir fricción inicial
     'react/react-in-jsx-scope': 'off',
     'react/prop-types': 'off',
+    'react/no-unescaped-entities': 'warn',
     'no-unused-vars': 'warn',
     'no-console': 'warn',
     'import/no-unresolved': 'off',
