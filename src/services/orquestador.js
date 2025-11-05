@@ -395,9 +395,9 @@ export class OrquestadorWally {
         isValid = currentLogic.options.map(opt => opt.toLowerCase()).includes(userMessage.toLowerCase().trim());
       } else if (currentLogic.validation.type === 'text') {
         isValid = userMessage.trim().length >= (currentLogic.validation.minLength || 1);
-      } else if (currentLogic.validation.type === 'email') {
+  } else if (currentLogic.validation.type === 'email') {
         isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userMessage);
-      } else if (currentLogic.validation.type === 'phone') {
+  } else if (currentLogic.validation.type === 'phone') {
         isValid = /^\d{10}$/.test(userMessage.replace(/\D/g, ''));
       } else if (currentLogic.validation.type === 'cedula') {
         isValid = /^\d{8,10}$/.test(userMessage.replace(/\D/g, ''));
@@ -415,10 +415,52 @@ export class OrquestadorWally {
 
       // Guardar la respuesta del usuario usando la nueva función enrutadora
       await this.saveData(sessionId, currentLogic.field, userMessage);
+
+      // Si acabamos de capturar el email, disparamos envío de código OTP
+      if (currentLogic.field === 'email') {
+        try {
+          const nombreCompleto = solicitudData?.nombre_solicitante || '';
+          // Llamar API OTP para enviar el código
+          await fetch('/api/email-verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'send_code', sessionId, email: userMessage, nombre: nombreCompleto })
+          });
+        } catch (_) {}
+      }
       
       // --- Flujo normal de la conversación ---
       const nextLogic = conversationFlow.find(step => step.step === currentLogic.nextStep);
       const nextMessage = nextLogic ? (nextLogic.question || nextLogic.prompt).replace('{nombre_solicitante}', nombreSolicitante) : "Ya hemos completado la solicitud.";
+
+      // Si estamos en el paso de verificación de código, validar contra la API
+      if (currentLogic.field === 'email_verification_code') {
+        try {
+          const { data: solicitudRow } = await supabase.from('solicitudes').select('email, nombre_solicitante').eq('id', sessionId).single();
+          const verifyRes = await fetch('/api/email-verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'verify_code', sessionId, email: solicitudRow?.email || solicitudRow?.email_solicitante, code: userMessage })
+          });
+          const verifyJson = await verifyRes.json();
+          if (!verifyJson?.ok) {
+            const errorMap = {
+              expired: 'El código ha expirado. Te envié uno nuevo a tu correo.',
+              invalid_code: 'El código ingresado no es válido. Intenta nuevamente.',
+              not_found: 'No encontramos un código activo. Te envié uno nuevo a tu correo.',
+            };
+            // Si expiró o no existe, volver a enviar
+            if (verifyJson?.error === 'expired' || verifyJson?.error === 'not_found') {
+              try { await fetch('/api/email-verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'send_code', sessionId, email: solicitudRow?.email || solicitudRow?.email_solicitante, nombre: solicitudRow?.nombre_solicitante }) }); } catch (_) {}
+            }
+            return { reply: errorMap[verifyJson?.error] || 'No pudimos verificar el código. Revisa tu correo e intenta de nuevo.', nextStep: currentStep };
+          }
+          // Éxito: avanzamos al siguiente paso (contraseña)
+          return { reply: '✅ Correo verificado correctamente. Continuemos.', nextStep: currentLogic.nextStep };
+        } catch (e) {
+          return { reply: 'Ocurrió un error verificando tu código. Intenta de nuevo.', nextStep: currentStep };
+        }
+      }
       
       // Construir respuesta base
       const response = { 

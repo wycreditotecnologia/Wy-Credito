@@ -156,6 +156,38 @@ function validateGemini(env) {
   return isValid;
 }
 
+// Validar configuración de DeepSeek
+function validateDeepSeek(env) {
+  log('\n🧠 Validando configuración de DeepSeek API...', 'cyan');
+  const apiKey = env.DEEPSEEK_API_KEY;
+  const viteKey = env.VITE_DEEPSEEK_API_KEY;
+  const baseUrl = env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
+
+  let isValid = true;
+
+  if (!apiKey || apiKey === 'tu_deepseek_api_key_aqui') {
+    logError('DEEPSEEK_API_KEY no configurada');
+    isValid = false;
+  } else if (!isValidApiKey(apiKey, 30)) {
+    logError('DEEPSEEK_API_KEY no parece válida (muy corta)');
+    isValid = false;
+  } else {
+    logSuccess(`API Key de DeepSeek configurada (${apiKey.length} caracteres)`);
+  }
+
+  if (viteKey) {
+    logWarning('VITE_DEEPSEEK_API_KEY detectada. No expongas claves en el frontend.');
+  }
+
+  if (!isValidUrl(baseUrl)) {
+    logWarning(`DEEPSEEK_BASE_URL no es una URL válida: ${baseUrl}`);
+  } else {
+    logSuccess(`Endpoint de DeepSeek: ${baseUrl}`);
+  }
+
+  return isValid;
+}
+
 // Validar configuración de la aplicación
 function validateApp(env) {
   log('\n⚙️  Validando configuración de la aplicación...', 'cyan');
@@ -185,6 +217,10 @@ function validateFiles() {
     'src/services/gemini.js',
     'src/services/orquestador.js',
     'src/lib/supabase.js',
+    'src/lib/llmClient.js',
+    'api/llm-chat.js',
+    'api/llm-status.js',
+    'api/llm-extract.js',
     'database/setup_database.sql',
     'package.json'
   ];
@@ -254,6 +290,7 @@ async function main() {
   const results = {
     supabase: validateSupabase(env),
     gemini: validateGemini(env),
+    deepseek: validateDeepSeek(env),
     app: validateApp(env),
     files: validateFiles(),
     dependencies: validateDependencies()
@@ -269,6 +306,7 @@ async function main() {
     const categoryNames = {
       supabase: 'Supabase',
       gemini: 'Gemini API',
+      deepseek: 'DeepSeek API',
       app: 'Aplicación',
       files: 'Archivos',
       dependencies: 'Dependencias'

@@ -15,7 +15,12 @@
     "clean": "rm -rf dist node_modules/.vite",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
-    "format": "prettier --write src/**/*.{js,jsx,ts,tsx,css,md}"
+    "format": "prettier --write src/**/*.{js,jsx,ts,tsx,css,md}",
+    "verify:llm-failover": "node scripts/verify-llm-failover.js",
+    "load:test:llm": "node scripts/load-test-llm.js",
+    "test": "vitest run --coverage",
+    "ci:checks": "npm run lint && npm run build:prod && npm run test",
+    "ci:trigger-deploy": "node scripts/trigger-deploy.js"
   },
   "keywords": [
     "react",
@@ -72,6 +77,7 @@
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.3.3",
     "typescript": "^5.3.3",
-    "vite": "^4.4.5"
+    "vite": "^4.4.5",
+    "vitest": "^1.6.0"
   }
 }

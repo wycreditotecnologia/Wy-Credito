@@ -37,7 +37,7 @@ const PantallaResumen = ({ sessionId, onStepComplete }) => {
 
     const loadSummaryData = async () => {
         try {
-            const response = await fetch('/api/orquestador', {
+            const response = await fetch('/api/orchestrator', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ const PantallaResumen = ({ sessionId, onStepComplete }) => {
         setError('');
 
         try {
-            const response = await fetch('/api/orquestador', {
+            const response = await fetch('/api/orchestrator', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

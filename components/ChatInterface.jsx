@@ -11,6 +11,7 @@ import {
   Component
 } from 'iconoir-react';
 import { OrquestadorWally } from '../src/services/orquestador.js';
+import { llmClient } from '../src/lib/llmClient.js';
 
 const ChatInterface = ({ creditData = null, onClose, userName = 'Usuario' }) => {
   const [messages, setMessages] = useState([]);
@@ -18,6 +19,7 @@ const ChatInterface = ({ creditData = null, onClose, userName = 'Usuario' }) => 
   const [isLoading, setIsLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const messagesEndRef = useRef(null);
+  const [activeProvider, setActiveProvider] = useState(null);
   const orquestador = useRef(new OrquestadorWally());
 
   const scrollToBottom = () => {
@@ -27,6 +29,22 @@ const ChatInterface = ({ creditData = null, onClose, userName = 'Usuario' }) => 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Consultar estado LLM para mostrar indicador del modelo activo
+  useEffect(() => {
+    let mounted = true;
+    const fetchStatus = async () => {
+      try {
+        const status = await llmClient.status();
+        if (mounted) setActiveProvider(status?.active || null);
+      } catch (e) {
+        // noop
+      }
+    };
+    fetchStatus();
+    const id = setInterval(fetchStatus, 15000);
+    return () => { mounted = false; clearInterval(id); };
+  }, []);
 
   // Efecto para inicializar la conversación
   useEffect(() => {
@@ -207,9 +225,16 @@ const ChatInterface = ({ creditData = null, onClose, userName = 'Usuario' }) => 
     <div className="flex h-screen bg-gray-50">
       {/* Barra lateral izquierda */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        {/* Header de la barra lateral */}
+        {/* Header de la barra lateral con indicador de modelo */}
         <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800">Wally Assistant</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800">Wally Assistant</h2>
+            {activeProvider && (
+              <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700 border border-gray-200">
+                Modelo: {activeProvider === 'gemini' ? 'Gemini' : 'DeepSeek'}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Sección de Chats */}

@@ -18,19 +18,44 @@ const MainLayout = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const [isSessionReady, setIsSessionReady] = useState(false);
+  const [localSessionId, setLocalSessionId] = useState(() => {
+    try {
+      return sessionId || window.localStorage.getItem('wally_session_id') || null;
+    } catch {
+      return sessionId || null;
+    }
+  });
 
   useEffect(() => {
     const initializeSession = async () => {
-      if (!sessionId) {
-        // Si no hay sessionId en la URL, creamos una y redirigimos.
-        try {
+      try {
+        if (!sessionId) {
+          // No hay ID en la URL: crear uno y guardarlo, además de intentar redirigir.
           const { sessionId: newSessionId } = await createNewSession();
-          navigate(`/solicitud/${newSessionId}`, { replace: true });
-        } catch (error) {
-          console.error("Error crítico al crear la sesión:", error);
+          setLocalSessionId(newSessionId);
+          try {
+            window.localStorage.setItem('wally_session_id', newSessionId);
+          } catch {}
+          // Intentar navegar, pero no depender de ello para continuar
+          try {
+            navigate(`/solicitud/${newSessionId}`, { replace: true });
+          } catch (navErr) {
+            console.warn('Navegación fallida, continuando con session local:', navErr);
+          }
+          setIsSessionReady(true);
+        } else {
+          // Ya tenemos un sessionId en la URL
+          try {
+            window.localStorage.setItem('wally_session_id', sessionId);
+          } catch {}
+          setLocalSessionId(sessionId);
+          setIsSessionReady(true);
         }
-      } else {
-        // Si ya tenemos un sessionId en la URL, estamos listos.
+      } catch (error) {
+        console.error('Error crítico al crear la sesión:', error);
+        // Permitir continuar con una sesión temporal si algo falla
+        const fallbackId = `tmp-${Date.now()}`;
+        setLocalSessionId(fallbackId);
         setIsSessionReady(true);
       }
     };
@@ -49,7 +74,12 @@ const MainLayout = () => {
   // Cuando la sesión está lista, renderizamos el componente que contiene el formulario.
   return (
     <main>
-      <ApplicationView sessionId={sessionId} />
+      {localSessionId && String(localSessionId).startsWith('tmp-') && (
+        <div style={{ padding: '12px 16px', background: '#fff3cd', color: '#664d03', margin: '8px 16px', borderRadius: 8 }}>
+          No se pudo crear la sesión en el servidor. Usando sesión temporal.
+        </div>
+      )}
+      <ApplicationView sessionId={localSessionId || sessionId} />
     </main>
   );
 };
