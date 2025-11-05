@@ -1,6 +1,7 @@
 // Dispara el webhook de redeploy si está configurado
 const https = require('https')
 const http = require('http')
+const fs = require('fs')
 
 const url = process.env.DEPLOY_WEBHOOK_URL
 
@@ -19,6 +20,23 @@ const req = client.request(url, { method: 'POST' }, (res) => {
     console.log('Webhook respondió con estado:', res.statusCode)
     console.log('Respuesta:', data || '<sin cuerpo>')
     if (res.statusCode >= 200 && res.statusCode < 300) {
+      // Intentar extraer jobId
+      try {
+        const json = JSON.parse(data)
+        const jobId = json?.job?.id
+        if (jobId) {
+          console.log('Job ID:', jobId)
+          // Guardar artefacto para el job de verificación
+          const artifact = { jobId, url }
+          fs.writeFileSync('deploy_job.json', JSON.stringify(artifact, null, 2))
+          // Si es un step de GitHub Actions, publicar output
+          if (process.env.GITHUB_OUTPUT) {
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `job_id=${jobId}\n`)
+          }
+        }
+      } catch (e) {
+        console.warn('No se pudo parsear respuesta JSON:', e.message)
+      }
       console.log('Despliegue automático disparado correctamente.')
       process.exit(0)
     } else {
