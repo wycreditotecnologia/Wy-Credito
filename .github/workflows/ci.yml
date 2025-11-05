@@ -9,6 +9,8 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    outputs:
+      vercel_job_id: ${{ steps.trigger.outputs.job_id }}
     env:
       NODE_ENV: test
       # Si necesitas secretos de despliegue, configúralos en el repositorio
@@ -41,7 +43,7 @@ jobs:
 
       - name: Publicar artefacto con Job ID
         if: success() && env.DEPLOY_WEBHOOK_URL != '' && hashFiles('deploy_job.json') != ''
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: vercel-deploy-job
           path: deploy_job.json
@@ -52,6 +54,7 @@ jobs:
     needs: build-and-test
     env:
       DEPLOY_WEBHOOK_URL: ${{ secrets.VERCEL_DEPLOY_WEBHOOK_URL }}
+      JOB_ID: ${{ needs.build-and-test.outputs.vercel_job_id }}
       MAX_MINUTES: 10
       INTERVAL_SECONDS: 10
     steps:
@@ -64,7 +67,7 @@ jobs:
           node-version: '18'
 
       - name: Descargar artefacto Job ID
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: vercel-deploy-job
           path: .
