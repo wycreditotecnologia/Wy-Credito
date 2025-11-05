@@ -40,6 +40,8 @@ jobs:
         if: success() && env.DEPLOY_WEBHOOK_URL != ''
         id: trigger
         run: npm run ci:trigger-deploy
+        env:
+          DEPLOY_WEBHOOK_URL: ${{ secrets.VERCEL_DEPLOY_WEBHOOK_URL }}
 
       - name: Publicar artefacto con Job ID
         if: success() && env.DEPLOY_WEBHOOK_URL != '' && hashFiles('deploy_job.json') != ''
