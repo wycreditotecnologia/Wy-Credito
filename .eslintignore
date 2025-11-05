@@ -3,4 +3,3 @@ node_modules/
 vercel.json
 package-lock.json
 public/
-src/components/landing/CookieConsentBanner.jsx

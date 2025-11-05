@@ -1,13 +1,4 @@
-import React from 'react';
-
-export const CookieConsentBanner = () => {
-  return (
-    <div>
-      {/* El contenido y la lógica del banner se añadirán en el siguiente paso. */}
-    </div>
-  );
-};
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
