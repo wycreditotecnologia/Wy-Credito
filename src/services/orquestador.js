@@ -1,10 +1,11 @@
 import { supabase } from '../lib/supabaseClient';
 import { geminiModel } from '../lib/geminiClient';
 import { conversationFlow } from '../lib/conversationFlow';
+import { logger } from '../lib/logger';
 
 // --- FUNCIÓN DE EXTRACCIÓN CON IA (VERSIÓN FRONTEND) ---
 async function extractDataWithGemini(fileUrl, fileType) {
-  console.log(`Iniciando extracción con IA para el archivo: ${fileUrl}`);
+  logger.log(`Iniciando extracción con IA para el archivo: ${fileUrl}`);
   
   try {
     // 1. Descargar el archivo desde la URL pública de Supabase
@@ -37,11 +38,11 @@ async function extractDataWithGemini(fileUrl, fileType) {
     const jsonString = geminiResponseText.replace(/```json|```/g, '').trim();
     const extractedData = JSON.parse(jsonString);
 
-    console.log("Datos extraídos por Gemini:", extractedData);
+    logger.log("Datos extraídos por Gemini:", extractedData);
     return extractedData;
 
   } catch (error) {
-    console.error("Error en la extracción con Gemini:", error);
+    logger.error("Error en la extracción con Gemini:", error);
     // Si la IA falla, devolvemos un objeto vacío para no detener el flujo
     return {};
   }
@@ -133,7 +134,7 @@ export class OrquestadorWally {
           .eq('id', solicitudId);
         
         if (error) throw new Error(`Error actualizando solicitudes: ${error.message}`);
-        console.log(`✅ Campo '${field}' guardado en solicitudes:`, value);
+        logger.log(`✅ Campo '${field}' guardado en solicitudes:`, value);
 
       } else if (targetTable === 'empresas') {
         if (empresaData) {
@@ -144,7 +145,7 @@ export class OrquestadorWally {
             .eq('id', empresaData.id);
           
           if (error) throw new Error(`Error actualizando empresas: ${error.message}`);
-          console.log(`✅ Campo '${field}' actualizado en empresas:`, value);
+          logger.log(`✅ Campo '${field}' actualizado en empresas:`, value);
         } else {
           // Si no existe, la crea (caso del primer dato de la empresa)
           const { error } = await supabase
@@ -152,7 +153,7 @@ export class OrquestadorWally {
             .insert({ [field]: value, solicitud_id: solicitudId });
           
           if (error) throw new Error(`Error insertando en empresas: ${error.message}`);
-          console.log(`✅ Nueva empresa creada con campo '${field}':`, value);
+          logger.log(`✅ Nueva empresa creada con campo '${field}':`, value);
         }
       } else if (targetTable === 'documentos') {
         // Lógica para guardar URLs de documentos en la tabla 'documentos'
@@ -177,7 +178,7 @@ export class OrquestadorWally {
           });
         
         if (error) throw new Error(`Error insertando documento: ${error.message}`);
-        console.log(`✅ Documento '${tipoDocumento}' guardado en documentos:`, value);
+        logger.log(`✅ Documento '${tipoDocumento}' guardado en documentos:`, value);
         
       } else if (targetTable === 'garantias') {
         // Lógica para guardar datos de garantía en la tabla 'garantias'
@@ -212,7 +213,7 @@ export class OrquestadorWally {
             .eq('id', garantiaData.id);
           
           if (error) throw new Error(`Error actualizando garantía: ${error.message}`);
-          console.log(`✅ Campo '${dbField}' actualizado en garantías:`, value);
+          logger.log(`✅ Campo '${dbField}' actualizado en garantías:`, value);
         } else {
           // Si no existe, la crea (necesita empresa_id)
           if (!empresaData) {
@@ -224,10 +225,10 @@ export class OrquestadorWally {
             .insert({ [dbField]: value, empresa_id: empresaData.id });
           
           if (error) throw new Error(`Error insertando garantía: ${error.message}`);
-          console.log(`✅ Nueva garantía creada con campo '${dbField}':`, value);
+          logger.log(`✅ Nueva garantía creada con campo '${dbField}':`, value);
         }
       } else {
-        console.warn(`⚠️ Campo "${field}" no tiene una tabla de destino definida.`);
+        logger.warn(`⚠️ Campo "${field}" no tiene una tabla de destino definida.`);
         // Fallback: guardar en solicitudes como antes
         const { error } = await supabase
           .from('solicitudes')
@@ -235,11 +236,11 @@ export class OrquestadorWally {
           .eq('id', solicitudId);
         
         if (error) throw new Error(`Error en fallback a solicitudes: ${error.message}`);
-        console.log(`⚠️ Campo '${field}' guardado en solicitudes (fallback):`, value);
+        logger.log(`⚠️ Campo '${field}' guardado en solicitudes (fallback):`, value);
       }
 
     } catch (error) {
-      console.error(`❌ Error en saveData para campo '${field}':`, error);
+      logger.error(`❌ Error en saveData para campo '${field}':`, error);
       throw error;
     }
   }
@@ -345,7 +346,7 @@ export class OrquestadorWally {
           };
 
           // Por ahora, solo logueamos el payload del email
-          console.log("Email payload preparado:", emailPayload);
+      logger.log("Email payload preparado:", emailPayload);
 
           return {
             reply: "¡Solicitud enviada con éxito! Recibirá un correo de confirmación con todos los detalles. Gracias por confiar en Wy Credito.",
@@ -479,7 +480,7 @@ export class OrquestadorWally {
       return response;
 
     } catch (error) {
-      console.error("Error en el Orquestador:", error);
+      logger.error("Error en el Orquestador:", error);
       return { 
         error: "Hubo un error procesando su solicitud." 
       };
@@ -536,7 +537,7 @@ export class OrquestadorWally {
       };
 
     } catch (error) {
-      console.error("Error obteniendo datos del resumen:", error);
+      logger.error("Error obteniendo datos del resumen:", error);
       return {
         success: false,
         error: error.message
@@ -573,8 +574,8 @@ export class OrquestadorWally {
 
       // TODO: Aquí se enviaría el email de confirmación
       // Por ahora solo simulamos el envío
-      console.log(`📧 Email de confirmación enviado a: ${solicitudData.email}`);
-      console.log(`📋 Código de seguimiento: ${trackingCode}`);
+      logger.log(`📧 Email de confirmación enviado a: ${solicitudData.email}`);
+      logger.log(`📋 Código de seguimiento: ${trackingCode}`);
 
       return {
         success: true,
@@ -583,7 +584,7 @@ export class OrquestadorWally {
       };
 
     } catch (error) {
-      console.error("Error completando el envío:", error);
+      logger.error("Error completando el envío:", error);
       return {
         success: false,
         error: error.message

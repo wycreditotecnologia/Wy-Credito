@@ -7,6 +7,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { geminiConfig, appConfig } from '../config/index.js';
+import { logger } from '../lib/logger';
 
 class GeminiService {
   constructor() {
@@ -31,13 +32,13 @@ class GeminiService {
           safetySettings: geminiConfig.safetySettings,
         });
         this.isInitialized = true;
-        console.log('✅ Gemini API inicializada correctamente');
+        logger.log('✅ Gemini API inicializada correctamente');
       } else {
-        console.warn('⚠️ Gemini API no configurada - usando modo simulado');
+        logger.warn('⚠️ Gemini API no configurada - usando modo simulado');
         this.isInitialized = false;
       }
     } catch (error) {
-      console.error('❌ Error al inicializar Gemini API:', error);
+      logger.error('❌ Error al inicializar Gemini API:', error);
       this.isInitialized = false;
     }
   }
@@ -66,7 +67,7 @@ class GeminiService {
       return this.validateAndCleanResponse(text);
       
     } catch (error) {
-      console.error('❌ Error al generar respuesta con Gemini:', error);
+      logger.error('❌ Error al generar respuesta con Gemini:', error);
       
       // Fallback a respuesta simulada en caso de error
       return this.generateMockResponse(prompt, context);

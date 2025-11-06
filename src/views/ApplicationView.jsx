@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Stepper, Step, StepLabel, Typography, Container, Paper } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -11,8 +11,6 @@ import FormularioAceptacion from '../components/forms/FormularioAceptacion';
 import FormularioGarantia from '../components/forms/FormularioGarantia';
 import PantallaResumen from '../components/forms/PantallaResumen';
 
-// Importar el orquestador
-import OrquestadorWally from '../services/orquestador';
 
 // Styled components
 const StyledContainer = styled(Container)(({ theme }) => ({
@@ -65,7 +63,7 @@ const ApplicationView = ({ sessionId }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
-  const [orquestador] = useState(new OrquestadorWally());
+  
 
   // Función para avanzar al siguiente paso
   const handleNext = async (stepData = {}) => {
@@ -100,7 +98,6 @@ const ApplicationView = ({ sessionId }) => {
       }
 
     } catch (error) {
-      console.error('❌ Error en handleNext:', error);
       alert('Error guardando los datos. Por favor, inténtelo de nuevo.');
     } finally {
       setLoading(false);
@@ -133,16 +130,14 @@ const ApplicationView = ({ sessionId }) => {
       const result = await response.json();
       return result.data;
     } catch (error) {
-      console.error('❌ Error obteniendo datos del resumen:', error);
       return null;
     }
   };
 
   // Función para completar el envío
   const completeSubmission = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
       const response = await fetch('/api/orchestrator', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -158,9 +153,6 @@ const ApplicationView = ({ sessionId }) => {
 
       const result = await response.json();
       return result;
-    } catch (error) {
-      console.error('❌ Error completando el envío:', error);
-      throw error;
     } finally {
       setLoading(false);
     }
