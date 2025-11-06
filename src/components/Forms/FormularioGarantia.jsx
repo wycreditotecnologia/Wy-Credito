@@ -10,7 +10,6 @@ import {
     InputAdornment,
     CircularProgress
 } from '@mui/material';
-import { PhotoCamera as PhotoCameraIcon } from '@mui/icons-material';
 import FileUploadImage from '../FileUpload/FileUploadImage';
 
 const FormularioGarantia = ({ sessionId, onStepComplete }) => {

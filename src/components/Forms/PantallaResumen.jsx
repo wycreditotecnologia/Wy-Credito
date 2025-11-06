@@ -32,35 +32,44 @@ const PantallaResumen = ({ sessionId, onStepComplete }) => {
     const [success, setSuccess] = useState('');
 
     useEffect(() => {
-        loadSummaryData();
-    }, [sessionId]);
+        let isActive = true;
+        setLoading(true);
 
-    const loadSummaryData = async () => {
-        try {
-            const response = await fetch('/api/orchestrator', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'get_summary_data',
-                    sessionId
-                }),
-            });
+        const loadSummaryData = async () => {
+            try {
+                const response = await fetch('/api/orchestrator', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'get_summary_data',
+                        sessionId
+                    }),
+                });
 
-            const result = await response.json();
+                const result = await response.json();
 
-            if (result.success) {
-                setSummaryData(result.data);
-            } else {
-                setError(result.error || 'Error al cargar los datos del resumen');
+                if (!isActive) return;
+
+                if (result.success) {
+                    setSummaryData(result.data);
+                } else {
+                    setError(result.error || 'Error al cargar los datos del resumen');
+                }
+            } catch (err) {
+                if (!isActive) return;
+                setError('Error de conexión al cargar el resumen');
+            } finally {
+                if (isActive) {
+                    setLoading(false);
+                }
             }
-        } catch (err) {
-            setError('Error de conexión al cargar el resumen');
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+
+        loadSummaryData();
+        return () => { isActive = false; };
+    }, [sessionId]);
 
     const handleFinalSubmission = async () => {
         setSubmitting(true);

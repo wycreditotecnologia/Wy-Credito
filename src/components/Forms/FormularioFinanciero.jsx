@@ -12,11 +12,11 @@ import {
     CircularProgress 
 } from '@mui/material';
 import { 
-    Assessment as AssessmentIcon, 
     CloudUpload as CloudUploadIcon,
     HelpOutline as HelpOutlineIcon
 } from '@mui/icons-material';
 import FileUpload from '../FileUpload/FileUpload';
+import { logger } from '../../lib/logger.js';
 
 const FormularioFinanciero = ({ onStepComplete, sessionId }) => {
     // Estado para almacenar URLs de documentos y respuestas de preguntas
@@ -45,7 +45,7 @@ const FormularioFinanciero = ({ onStepComplete, sessionId }) => {
     // Manejar éxito en la subida de archivos
     const handleUploadSuccess = (url, documentType) => {
         setFormData(prev => ({ ...prev, [documentType]: url }));
-        console.log(`✅ Documento ${documentType} subido:`, url);
+        logger.log(`✅ Documento ${documentType} subido:`, url);
     };
 
     // Validar formulario
@@ -99,7 +99,7 @@ const FormularioFinanciero = ({ onStepComplete, sessionId }) => {
                 detalle_activos_fijos: formData.detalle_activos_fijos.trim()
             };
 
-            console.log('📊 Enviando información financiera:', payload);
+            logger.log('📊 Enviando información financiera:', payload);
 
             // Llamada a la API del orquestador
             const response = await fetch('/api/orchestrator', {
@@ -120,7 +120,7 @@ const FormularioFinanciero = ({ onStepComplete, sessionId }) => {
                 throw new Error(result.error || 'Error al enviar la información financiera');
             }
 
-            console.log('✅ Información financiera enviada exitosamente:', result);
+            logger.log('✅ Información financiera enviada exitosamente:', result);
             
             // Navegar al siguiente paso
             if (onStepComplete) {
@@ -128,7 +128,7 @@ const FormularioFinanciero = ({ onStepComplete, sessionId }) => {
             }
 
         } catch (error) {
-            console.error('❌ Error al enviar información financiera:', error);
+            logger.error('❌ Error al enviar información financiera:', error);
             setSubmitError(error.message || 'Error al enviar los datos. Por favor, inténtelo de nuevo.');
         } finally {
             setLoading(false);
