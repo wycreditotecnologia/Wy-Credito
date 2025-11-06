@@ -4,7 +4,7 @@ import { logger } from '../lib/logger.js';
 
 // Asumimos que el componente del formulario se llama 'ApplicationView.jsx'
 // y lo crearemos en la carpeta 'src/views/'.
-import ApplicationView from '../components/ApplicationView/ApplicationView';
+import ApplicationView from '../views/ApplicationView';
 
 // --- Simulación de la API del Orquestador ---
 const createNewSession = async () => {
