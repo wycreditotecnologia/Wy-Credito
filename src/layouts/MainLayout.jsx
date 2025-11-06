@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { logger } from '../lib/logger.js';
 
 // Asumimos que el componente del formulario se llama 'ApplicationView.jsx'
 // y lo crearemos en la carpeta 'src/views/'.
@@ -7,9 +8,9 @@ import ApplicationView from '../views/ApplicationView';
 
 // --- Simulación de la API del Orquestador ---
 const createNewSession = async () => {
-  console.log("Arquitecto: Solicitando nueva sesión al Orquestador...");
+  logger.log("Arquitecto: Solicitando nueva sesión al Orquestador...");
   const newSessionId = crypto.randomUUID();
-  console.log("Arquitecto: Orquestador respondió con nuevo sessionId:", newSessionId);
+  logger.log("Arquitecto: Orquestador respondió con nuevo sessionId:", newSessionId);
   return { sessionId: newSessionId };
 };
 // --- Fin de la simulación ---
@@ -35,24 +36,24 @@ const MainLayout = () => {
           setLocalSessionId(newSessionId);
           try {
             window.localStorage.setItem('wally_session_id', newSessionId);
-          } catch {}
+          } catch { void 0; }
           // Intentar navegar, pero no depender de ello para continuar
           try {
             navigate(`/solicitud/${newSessionId}`, { replace: true });
           } catch (navErr) {
-            console.warn('Navegación fallida, continuando con session local:', navErr);
+            logger.warn('Navegación fallida, continuando con session local:', navErr);
           }
           setIsSessionReady(true);
         } else {
           // Ya tenemos un sessionId en la URL
           try {
             window.localStorage.setItem('wally_session_id', sessionId);
-          } catch {}
+          } catch { void 0; }
           setLocalSessionId(sessionId);
           setIsSessionReady(true);
         }
       } catch (error) {
-        console.error('Error crítico al crear la sesión:', error);
+        logger.error('Error crítico al crear la sesión:', error);
         // Permitir continuar con una sesión temporal si algo falla
         const fallbackId = `tmp-${Date.now()}`;
         setLocalSessionId(fallbackId);

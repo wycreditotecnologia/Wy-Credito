@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 // IMPORTACIONES ACTUALIZADAS
 import { TextGenerateEffect } from '../ui/text-generate-effect';
 import { ShimmerButton } from '../ui/shimmer-button';

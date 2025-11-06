@@ -6,6 +6,8 @@
  * con validaciones de seguridad y manejo de errores.
  */
 
+import { logger } from '../lib/logger.js';
+
 // Validador de URLs
 const isValidUrl = (url) => {
   try {
@@ -33,12 +35,12 @@ const supabaseConfig = {
     const keyValid = isValidApiKey(this.anonKey, 100);
     
     if (!urlValid) {
-      console.error('❌ Supabase URL inválida o no configurada');
+      logger.error('❌ Supabase URL inválida o no configurada');
       return false;
     }
     
     if (!keyValid) {
-      console.error('❌ Supabase API Key inválida o no configurada');
+      logger.error('❌ Supabase API Key inválida o no configurada');
       return false;
     }
     
@@ -94,7 +96,7 @@ const geminiConfig = {
     const keyValid = isValidApiKey(this.apiKey, 30);
     
     if (!keyValid) {
-      console.error('❌ Gemini API Key inválida o no configurada');
+      logger.error('❌ Gemini API Key inválida o no configurada');
       return false;
     }
     
@@ -183,16 +185,16 @@ const validateConfiguration = () => {
   
   // Mostrar resultados
   if (errors.length > 0) {
-    console.error('❌ Errores de configuración:', errors);
+    logger.error('❌ Errores de configuración:', errors);
     throw new Error(`Configuración inválida: ${errors.join(', ')}`);
   }
   
   if (warnings.length > 0) {
-    console.warn('⚠️ Advertencias de configuración:', warnings);
+    logger.warn('⚠️ Advertencias de configuración:', warnings);
   }
   
   if (errors.length === 0 && warnings.length === 0) {
-    console.log('✅ Configuración validada correctamente');
+    logger.log('✅ Configuración validada correctamente');
   }
   
   return {
@@ -235,5 +237,5 @@ export {
 try {
   validateConfiguration();
 } catch (error) {
-  console.error('Error al validar configuración:', error.message);
+  logger.error('Error al validar configuración:', error.message);
 }

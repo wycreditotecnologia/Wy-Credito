@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Stepper, Step, StepLabel, Typography, Container, Paper } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { logger } from '../lib/logger.js';
 
 // Importar todos los componentes de formulario
 import FormularioEmpresa from './forms/FormularioEmpresa';
@@ -12,7 +13,7 @@ import FormularioGarantia from './forms/FormularioGarantia';
 import PantallaResumen from './forms/PantallaResumen';
 
 // Importar el orquestador
-import OrquestadorWally from '../services/orquestador';
+// import OrquestadorWally from '../services/orquestador';
 
 // Styled components
 const StyledContainer = styled(Container)(({ theme }) => ({
@@ -66,7 +67,7 @@ const MainLayout = () => {
   const [sessionId, setSessionId] = useState(null);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
-  const [orquestador] = useState(new OrquestadorWally());
+  // const [orquestador] = useState(new OrquestadorWally());
 
   // Inicializar sesión al montar el componente
   useEffect(() => {
@@ -94,9 +95,9 @@ const MainLayout = () => {
         throw new Error('Error inicializando sesión');
       }
 
-      console.log('✅ Sesión inicializada:', newSessionId);
+      logger.log('✅ Sesión inicializada:', newSessionId);
     } catch (error) {
-      console.error('❌ Error inicializando sesión:', error);
+      logger.error('❌ Error inicializando sesión:', error);
     } finally {
       setLoading(false);
     }
@@ -135,7 +136,7 @@ const MainLayout = () => {
       }
 
     } catch (error) {
-      console.error('❌ Error en handleNext:', error);
+      logger.error('❌ Error en handleNext:', error);
       alert('Error guardando los datos. Por favor, inténtelo de nuevo.');
     } finally {
       setLoading(false);
@@ -168,7 +169,7 @@ const MainLayout = () => {
       const result = await response.json();
       return result.data;
     } catch (error) {
-      console.error('❌ Error obteniendo datos del resumen:', error);
+      logger.error('❌ Error obteniendo datos del resumen:', error);
       return null;
     }
   };
@@ -194,7 +195,7 @@ const MainLayout = () => {
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error('❌ Error completando el envío:', error);
+      logger.error('❌ Error completando el envío:', error);
       throw error;
     } finally {
       setLoading(false);
