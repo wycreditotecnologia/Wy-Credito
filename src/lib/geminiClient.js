@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { logger } from './logger.js';
 import { llmClient } from './llmClient';
 
 const useBackend = import.meta.env.VITE_USE_BACKEND_LLM === 'true' || import.meta.env.VITE_USE_BACKEND_GEMINI === 'true';
@@ -24,7 +25,7 @@ if (useBackend) {
     }
   };
 } else if (!apiKey) {
-  console.warn('Gemini API Key is missing from .env - using mock mode');
+  logger.warn('Gemini API Key is missing from .env - using mock mode');
   geminiModel = {
     generateContent: async () => ({
       response: {

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // Ligero util de logging para evitar warnings de ESLint por uso de console
 // Usa console solo en desarrollo o si VITE_ENABLE_DEBUG_LOGS === 'true'
 

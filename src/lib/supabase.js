@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { logger } from './logger.js'
 
 // Configuración de Supabase
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -23,10 +24,10 @@ if (!isDevelopment && supabaseUrl && supabaseAnonKey) {
         persistSession: false
       }
     })
-    console.log('✅ Cliente administrativo de Supabase configurado')
+    logger.log('✅ Cliente administrativo de Supabase configurado')
   }
 } else {
-  console.warn('Modo desarrollo: Usando cliente Supabase simulado')
+  logger.warn('Modo desarrollo: Usando cliente Supabase simulado')
   // Cliente mock para desarrollo
   const mockClient = {
     from: () => ({
@@ -74,7 +75,7 @@ export function getSupabaseClient(requiresAdmin = false) {
  */
 export async function obtenerEstadisticasAdmin() {
   if (!isAdminAvailable()) {
-    console.warn('Service Role Key no configurada - usando datos simulados')
+    logger.warn('Service Role Key no configurada - usando datos simulados')
     return {
       success: true,
       data: {
@@ -103,7 +104,7 @@ export async function obtenerEstadisticasAdmin() {
     
     return { success: true, data: stats }
   } catch (error) {
-    console.error('Error obteniendo estadísticas:', error)
+    logger.error('Error obteniendo estadísticas:', error)
     return { success: false, error: error.message }
   }
 }
@@ -126,7 +127,7 @@ export async function crearSolicitud(solicitudData) {
         estado: solicitudData.estado || 'incompleta'
       }
       
-      console.log('Solicitud simulada creada:', solicitudSimulada)
+      logger.log('Solicitud simulada creada:', solicitudSimulada)
       return { success: true, data: solicitudSimulada }
     }
 
@@ -145,7 +146,7 @@ export async function crearSolicitud(solicitudData) {
 
     return { success: true, data }
   } catch (error) {
-    console.error('Error al crear solicitud:', error)
+    logger.error('Error al crear solicitud:', error)
     return { success: false, error: error.message }
   }
 }
@@ -166,7 +167,7 @@ export async function actualizarSolicitud(id, updateData) {
         fecha_actualizacion: new Date().toISOString()
       }
       
-      console.log('Solicitud simulada actualizada:', solicitudActualizada)
+      logger.log('Solicitud simulada actualizada:', solicitudActualizada)
       return { success: true, data: solicitudActualizada }
     }
 
@@ -184,7 +185,7 @@ export async function actualizarSolicitud(id, updateData) {
 
     return { success: true, data }
   } catch (error) {
-    console.error('Error al actualizar solicitud:', error)
+    logger.error('Error al actualizar solicitud:', error)
     return { success: false, error: error.message }
   }
 }
@@ -198,7 +199,7 @@ export const obtenerSolicitudPorEmail = async (email) => {
   try {
     // En modo desarrollo, simular búsqueda
     if (import.meta.env.DEV) {
-      console.log('Buscando solicitud simulada para email:', email)
+      logger.log('Buscando solicitud simulada para email:', email)
       // Simular que no hay solicitud existente para permitir crear nueva
       return { success: true, data: null }
     }
@@ -214,7 +215,7 @@ export const obtenerSolicitudPorEmail = async (email) => {
     if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows found
     return { success: true, data: data || null }
   } catch (error) {
-    console.error('Error al obtener solicitud:', error)
+    logger.error('Error al obtener solicitud:', error)
     return { success: false, error: error.message }
   }
 }
@@ -236,7 +237,7 @@ export async function guardarMensaje(solicitudId, mensajeData) {
         fecha_mensaje: new Date().toISOString()
       }
       
-      console.log('Mensaje simulado guardado:', mensajeSimulado)
+      logger.log('Mensaje simulado guardado:', mensajeSimulado)
       return { success: true, data: mensajeSimulado }
     }
 
@@ -252,9 +253,9 @@ export async function guardarMensaje(solicitudId, mensajeData) {
 
     if (error) throw error
 
-    return { success: true, data }
+  return { success: true, data }
   } catch (error) {
-    console.error('Error al guardar mensaje:', error)
+    logger.error('Error al guardar mensaje:', error)
     return { success: false, error: error.message }
   }
 }
