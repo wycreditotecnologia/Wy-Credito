@@ -4,7 +4,7 @@ const TestimonialCard = ({ quote, author, company }) => {
   return (
     <figure className="p-6 border border-white/10 rounded-xl bg-gray-900/50">
       <blockquote className="text-gray-300">
-        <p>"{quote}"</p>
+        <p>{quote}</p>
       </blockquote>
       <figcaption className="mt-4 flex items-center gap-3">
         {/* En el futuro aquí podría ir un avatar/logo */}

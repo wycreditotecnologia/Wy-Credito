@@ -10,7 +10,7 @@ const TermsAndConditionsPage = () => {
             <strong>Última actualización:</strong> 2 de Octubre, 2025
           </p>
           <p>
-            El presente documento establece los Términos y Condiciones que rigen el uso de la plataforma digital de Wy Credito (en adelante, "la Plataforma"). Al acceder y utilizar nuestros servicios, usted (en adelante, "el Usuario") declara haber leído, entendido y aceptado en su totalidad los presentes términos.
+            El presente documento establece los Términos y Condiciones que rigen el uso de la plataforma digital de Wy Credito (en adelante, &quot;la Plataforma&quot;). Al acceder y utilizar nuestros servicios, usted (en adelante, &quot;el Usuario&quot;) declara haber leído, entendido y aceptado en su totalidad los presentes términos.
           </p>
 
           <h2 className="text-2xl font-semibold mt-8 border-b pb-2">1. Objeto del Servicio</h2>

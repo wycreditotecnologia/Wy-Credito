@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import SolicitudRecibidaEmail from '../../emails/SolicitudRecibidaEmail';
+import { logger } from '../../lib/logger.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
     res.status(200).json(data);
 
   } catch (error) {
-    console.error("Error enviando el correo:", error);
+    logger.error("Error enviando el correo:", error);
     res.status(500).json({ error: "Hubo un error al enviar el correo de confirmación." });
   }
 }

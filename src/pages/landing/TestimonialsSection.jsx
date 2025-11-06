@@ -92,7 +92,7 @@ export default function TestimonialsSection() {
                 </Avatar>
                 <div className="space-y-2">
                   <p className="text-gray-800 dark:text-gray-200 leading-relaxed">
-                    "{testimonial.quote}"
+                    {testimonial.quote}
                   </p>
                   <div>
                     <p className="font-semibold text-black dark:text-white">

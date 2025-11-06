@@ -5,6 +5,7 @@
 
 import axios from 'axios';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { logger } from '../src/lib/logger.js';
 
 const deepseekEndpoint = 'https://api.deepseek.com/v1/chat/completions';
 
@@ -121,7 +122,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ ...primaryRes, failover: false });
   } catch (errPrimary) {
     const canFailover = env.LLM_FAILOVER_ENABLED;
-    console.error('Primary LLM error:', {
+    logger.error('Primary LLM error:', {
       provider: primary,
       message: errPrimary?.message,
     });
@@ -135,12 +136,12 @@ export default async function handler(req, res) {
         throw new Error(`Simulated failure on ${alternate}`);
       }
       const altRes = await callByName(alternate);
-      console.warn('LLM failover executed', { from: primary, to: alternate });
+      logger.warn('LLM failover executed', { from: primary, to: alternate });
       // Log evento de failover
       logEvent({ accion: 'llm_failover', estado_anterior: primary, estado_nuevo: alternate, datos_validados: { providerUsed: altRes.providerUsed, failover: true }, errores: { primaryError: errPrimary?.message } });
       return res.status(200).json({ ...altRes, failover: true, failoverFrom: primary, failoverTo: alternate });
     } catch (errAlt) {
-      console.error('Alternate LLM also failed:', {
+      logger.error('Alternate LLM also failed:', {
         provider: alternate,
         message: errAlt?.message,
       });

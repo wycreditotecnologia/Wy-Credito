@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Sparkles, TrendingUp, Zap, ShieldCheck } from 'lucide-react';
+import { TrendingUp, Sparkles } from 'lucide-react';
 
 export default function HeroSection() {
   return (

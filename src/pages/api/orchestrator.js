@@ -1,5 +1,6 @@
 // src/pages/api/orchestrator.js
 import OrquestadorWally from '../../services/orquestador';
+import { logger } from '../../lib/logger.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -32,7 +33,7 @@ export default async function handler(req, res) {
         }
         res.status(200).json({ success: true, ...result });
     } catch (error) {
-        console.error(`[Orchestrator API Error] Action: ${action}`, error);
+        logger.error(`[Orchestrator API Error] Action: ${action}`, error);
         res.status(500).json({ success: false, error: error.message });
     }
 }
