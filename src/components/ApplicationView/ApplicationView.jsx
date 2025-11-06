@@ -196,22 +196,7 @@ const ApplicationView = ({ initialData, onCancel }) => {
     }
   };
 
-  // TEMPORAL: Mostrando MainLayout para desarrollo de la nueva interfaz
-  // TODO: Restaurar la lógica del chat cuando se complete la Fase 3
-  return (
-    <Box sx={{ height: '100vh' }}>
-      <MainLayout />
-      <Button
-        variant="text"
-        onClick={onCancel}
-        sx={{ position: 'absolute', top: 20, right: 20, zIndex: 1000 }}
-      >
-        Cancelar Solicitud
-      </Button>
-    </Box>
-  );
-
-  /* LÓGICA ORIGINAL DEL CHAT (COMENTADA TEMPORALMENTE)
+  // Restaurado: lógica de chat estilo Typeform/conversacional
   return (
     <Box sx={{ flexGrow: 1, p: { xs: 1, sm: 2 }, height: 'calc(100vh - 80px)' }}>
       <Grid container spacing={2} sx={{ height: '100%' }}>
@@ -241,7 +226,6 @@ const ApplicationView = ({ initialData, onCancel }) => {
       </Button>
     </Box>
   );
-  */
 };
 
 export default ApplicationView;
