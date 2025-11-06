@@ -11,6 +11,7 @@ import {
   FormGroup,
   Divider
 } from '@mui/material';
+import { logger } from '../../lib/logger.js';
 
 const FormularioAceptacion = ({ sessionId, onStepComplete }) => {
   // Estado para los checkboxes
@@ -78,7 +79,7 @@ const FormularioAceptacion = ({ sessionId, onStepComplete }) => {
         }
       };
 
-      console.log('Enviando declaraciones y aceptaciones:', payload);
+      logger.log('Enviando declaraciones y aceptaciones:', payload);
 
       // Enviar al orquestador
       const response = await fetch('/api/orchestrator', {
@@ -94,7 +95,7 @@ const FormularioAceptacion = ({ sessionId, onStepComplete }) => {
       }
 
       const result = await response.json();
-      console.log('Respuesta del orquestador:', result);
+      logger.log('Respuesta del orquestador:', result);
 
       // Notificar al componente padre que el paso se completó
       if (onStepComplete) {
@@ -102,7 +103,7 @@ const FormularioAceptacion = ({ sessionId, onStepComplete }) => {
       }
 
     } catch (error) {
-      console.error('Error al enviar declaraciones:', error);
+      logger.error('Error al enviar declaraciones:', error);
       setSubmitError('Error al enviar la información. Por favor, inténtelo de nuevo.');
     } finally {
       setIsSubmitting(false);
@@ -247,7 +248,7 @@ const FormularioAceptacion = ({ sessionId, onStepComplete }) => {
             </Button>
             
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Al hacer clic en "Finalizar", su solicitud será enviada para evaluación.
+              Al hacer clic en &quot;Finalizar&quot;, su solicitud será enviada para evaluación.
             </Typography>
           </Box>
         </Box>

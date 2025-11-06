@@ -25,6 +25,7 @@ import {
   LinkedIn as LinkedInIcon,
   Twitter as TwitterIcon,
 } from '@mui/icons-material';
+import { logger } from '../../lib/logger.js';
 
 const FormularioEmpresa = ({ onStepComplete, sessionId }) => {
   const [formData, setFormData] = useState({
@@ -177,7 +178,7 @@ const FormularioEmpresa = ({ onStepComplete, sessionId }) => {
       }
 
       // Si todo salió bien, navegar al siguiente paso
-      console.log('Datos enviados correctamente:', result);
+      logger.log('Datos enviados correctamente:', result);
       
       // Llamar a la función de callback para avanzar al siguiente paso
       if (onStepComplete) {
@@ -185,7 +186,7 @@ const FormularioEmpresa = ({ onStepComplete, sessionId }) => {
       }
 
     } catch (error) {
-      console.error('Error al enviar formulario:', error);
+      logger.error('Error al enviar formulario:', error);
       setSubmitError(error.message || 'Error al enviar los datos. Por favor, inténtelo de nuevo.');
     } finally {
       setLoading(false);

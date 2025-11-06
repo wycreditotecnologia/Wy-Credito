@@ -13,7 +13,6 @@ const FormularioDocumentacion = ({ onStepComplete, sessionId }) => {
         url_certificado_existencia: '',
         url_composicion_accionaria: '',
     });
-    const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [submitError, setSubmitError] = useState('');
 

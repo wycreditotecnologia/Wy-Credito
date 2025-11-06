@@ -12,6 +12,7 @@ import {
 } from 'iconoir-react';
 import { OrquestadorWally } from '../src/services/orquestador.js';
 import { llmClient } from '../src/lib/llmClient.js';
+import { logger } from '../src/lib/logger.js';
 
 const ChatInterface = ({ creditData = null, onClose, userName = 'Usuario' }) => {
   const [messages, setMessages] = useState([]);
@@ -76,7 +77,7 @@ const ChatInterface = ({ creditData = null, onClose, userName = 'Usuario' }) => 
           setMessages([botMessage]);
           setInitialized(true);
         } catch (error) {
-          console.error('Error al inicializar chat:', error);
+          logger.error('Error al inicializar chat:', error);
           // Mensaje de fallback en caso de error
           const fallbackMessage = {
             id: Date.now(),
@@ -122,7 +123,7 @@ const ChatInterface = ({ creditData = null, onClose, userName = 'Usuario' }) => 
 
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
-      console.error('Error al procesar mensaje:', error);
+      logger.error('Error al procesar mensaje:', error);
       const errorMessage = {
         id: Date.now() + 1,
         text: 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta nuevamente.',

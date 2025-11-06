@@ -9,7 +9,7 @@ const ChatInterface = ({ initialAmount, initialTerm, onGoBack }) => {
           Interfaz de Chat de Wally
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Aquí comenzará la conversación con nuestro asistente "Wally".
+          Aquí comenzará la conversación con nuestro asistente &quot;Wally&quot;.
         </Typography>
         <Typography variant="h6" sx={{ mt: 3 }}>
           Monto inicial: ${new Intl.NumberFormat('es-CO').format(initialAmount)}
