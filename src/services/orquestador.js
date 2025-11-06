@@ -118,7 +118,7 @@ export class OrquestadorWally {
   async saveData(solicitudId, field, value) {
     try {
       // Primero, busca si ya existe una empresa asociada a esta solicitud
-      const { data: empresaData, error: findError } = await supabase
+      const { data: empresaData } = await supabase
         .from('empresas')
         .select('id')
         .eq('solicitud_id', solicitudId)
@@ -281,7 +281,7 @@ export class OrquestadorWally {
       return { esValido: false, mensaje: 'La contraseña debe contener al menos un numero.' };
     }
 
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(contrasena)) {
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(contrasena)) {
       return { esValido: false, mensaje: 'La contraseña debe contener al menos un simbolo especial.' };
     }
 
@@ -427,7 +427,7 @@ export class OrquestadorWally {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'send_code', sessionId, email: userMessage, nombre: nombreCompleto })
           });
-        } catch (_) {}
+        } catch (e) { logger.warn('Fallo al enviar código OTP:', e); }
       }
       
       // --- Flujo normal de la conversación ---
@@ -452,7 +452,7 @@ export class OrquestadorWally {
             };
             // Si expiró o no existe, volver a enviar
             if (verifyJson?.error === 'expired' || verifyJson?.error === 'not_found') {
-              try { await fetch('/api/email-verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'send_code', sessionId, email: solicitudRow?.email || solicitudRow?.email_solicitante, nombre: solicitudRow?.nombre_solicitante }) }); } catch (_) {}
+              try { await fetch('/api/email-verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'send_code', sessionId, email: solicitudRow?.email || solicitudRow?.email_solicitante, nombre: solicitudRow?.nombre_solicitante }) }); } catch (e) { logger.warn('Fallo al reenviar código OTP:', e); }
             }
             return { reply: errorMap[verifyJson?.error] || 'No pudimos verificar el código. Revisa tu correo e intenta de nuevo.', nextStep: currentStep };
           }
@@ -500,14 +500,14 @@ export class OrquestadorWally {
       if (solicitudError) throw new Error(`Error obteniendo solicitud: ${solicitudError.message}`);
 
       // Obtener datos de la empresa
-      const { data: empresaData, error: empresaError } = await supabase
+      const { data: empresaData } = await supabase
         .from('empresas')
         .select('*')
         .eq('solicitud_id', sessionId)
         .single();
 
       // Obtener documentos
-      const { data: documentosData, error: documentosError } = await supabase
+      const { data: documentosData } = await supabase
         .from('documentos')
         .select('*')
         .eq('solicitud_id', sessionId);

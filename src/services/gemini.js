@@ -145,6 +145,8 @@ Responde de manera natural y conversacional:`;
    * @returns {string} - Respuesta simulada
    */
   generateMockResponse(prompt, context) {
+    // Avoid lint warnings for unused params in dev mode
+    void prompt; void context;
     const mockResponses = [
       "¡Hola! Soy Wally, tu asistente para solicitudes de crédito. ¿Podrías proporcionarme tu email para comenzar?",
       "Perfecto, ahora necesito conocer el NIT de tu empresa para continuar con la solicitud.",
