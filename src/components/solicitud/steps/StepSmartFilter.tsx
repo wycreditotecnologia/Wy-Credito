@@ -59,7 +59,9 @@ export default function StepSmartFilter({
                 if (appError) throw appError;
                 currentAppId = newApp.id;
                 setCreatedAppId(currentAppId); // Guardar en estado
-                onApplicationCreated(currentAppId);
+                if (currentAppId) {
+                    onApplicationCreated(currentAppId);
+                }
             }
 
             // Verificar que tenemos un ID válido
