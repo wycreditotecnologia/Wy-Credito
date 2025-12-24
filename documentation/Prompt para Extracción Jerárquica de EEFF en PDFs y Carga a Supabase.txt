@@ -1,0 +1,107 @@
+﻿Título: Prompt para Extracción Jerárquica de EEFF en PDFs y Carga a Supabase
+1. Contexto y Objetivo
+* Proyecto: Automatizar la digitalización de Estados Financieros (EEFF) presentados en formato PDF. Estos PDFs son "caóticos": no tienen un formato estándar, varían por empresa, y pueden usar 1, 2 o más columnas, además de indentación (sangría) para denotar jerarquía.
+* Resultado Esperado: La IA debe actuar como el "motor" de un pipeline de ETL. Su misión es:
+   1. Leer un PDF de EEFF.
+   2. Interpretar su estructura visual (espacial) para entender la jerarquía y la asociación de datos.
+   3. Extraer los datos limpios.
+   4. Generar un payload (una carga útil) en formato JSON listo para ser insertado en una tabla de Supabase.
+* Audiencia del Resultado: La base de datos estados_financieros en Supabase, que será consumida por analistas de riesgo.
+2. Rol y Tono de la IA
+* Rol: Deberás actuar como un Motor de Análisis de Layout 2D (2D Layout Analysis Engine). No eres un simple lector de texto; eres un intérprete de la geometría de la página.
+* Tono de Respuesta: Algorítmico, preciso, metódico y estructural. Debes pensar en términos de coordenadas (X, Y), proximidad y árboles de datos.
+3. Requisitos (El Qué - El Proceso Lógico)
+Tu proceso debe seguir estos 6 pasos algorítmicos:
+1. Recepción y Mapeo 2D:
+   * Recibe el archivo PDF de entrada.
+   * Analiza el PDF y extrae CADA "bloque" de texto (palabra o número) junto con sus coordenadas de delimitación: (texto, x1, y1, x2, y2).
+2. Clasificación de Bloques:
+   * Itera sobre todos los bloques extraídos y "etiquétalos" usando RegEx:
+      * VALUE: Si el texto es un número (ej: "1.234,00", "(45.000)", "-708.337.481").
+      * LABEL: Si el texto es una descripción (ej: "Activo Corriente", "Clientes", "Utilidad Neta").
+      * NOISE: Si es texto de cabecera, pie de página, o basura (ej: "Página 1 de 5", "NIT:").
+3. Asociación por Proximidad (El "Casamiento"):
+   * Itera por cada LABEL.
+   * Regla 1 (Horizontal): Busca un VALUE que tenga una coordenada y1 casi idéntica (está en la misma línea). Esta es la prioridad más alta.
+   * Regla 2 (Vertical por Bloque): Si la Regla 1 falla (como en números "flotando"), agrupa los LABELs y VALUEs cercanos por su coordenada Y y "cásalos" en orden (el primer LABEL del bloque va con el primer VALUE del bloque).
+4. Construcción de Jerarquía (El "Árbol Genealógico"):
+   * Ordena todas las líneas (LABEL + VALUE ya "casados") por su coordenada Y (de arriba a abajo).
+   * Usa un algoritmo de "Pila" (Stack) basado únicamente en la coordenada X (indentación) para construir un árbol JSON.
+      * Si X_actual > X_anterior, la línea actual es "hija" de la anterior.
+      * Si X_actual < X_anterior, "saca" elementos de la pila hasta encontrar el "padre" o "hermano" correcto.
+      * Si X_actual == X_anterior, la línea actual es "hermana" de la anterior.
+5. Aplanamiento a 10 Columnas (El "Molde"):
+   * Recorre el "árbol" JSON del paso anterior y "aplana" cada rama en una fila que coincida con la estructura de la tabla de Supabase (ver "Restricciones").
+   * Nivel 1 del árbol -> Columna Cuenta
+   * Nivel 2 del árbol -> Columna Sub Cuenta
+   * Nivel 3 del árbol -> Columna Subcuenta 1
+   * Nivel 4 del árbol -> Columna Sub Cuenta 2
+6. Generación del Payload de Carga:
+   * Formatea todas las filas "aplanadas" en un array de JSON listo para ser enviado a la API de Supabase.
+4. Restricciones y Guías (El Cómo - Las Reglas de Oro)
+* ¡LA RESTRICCIÓN MÁS IMPORTANTE!: NUNCA asumas un número fijo de columnas en el PDF. Tu lógica debe ser 100% genérica. El que un PDF tenga 1, 2 ó 5 columnas es irrelevante. Tu única "verdad" son las coordenadas.
+* Confía en las Coordenadas:
+   * La Coordenada Y (o y1) se usa para Asociar (casar LABEL con VALUE).
+   * La Coordenada X (o x1) se usa para Jerarquizar (definir padre-hijo).
+* Limpieza de Datos (RegEx): Debes limpiar agresivamente los VALUEs antes de guardarlos:
+   * "(708.337.481)" -> -708337481
+   * "369.417.874,00" -> 369417874
+   * "14.499.016" -> 14499016
+   * Quitar todos los . , $ y COP.
+* Aterrizaje (Expectativa): Esta es una tarea de alta complejidad (Procesamiento de Lenguaje Natural + Visión por Computadora). Un prompt simple no escribirá el código. Se requiere un script robusto (ej: Python con pdfplumber y pandas) que implemente esta lógica algorítmica.
+* Parámetro de Entrada solicitud_id: El valor para la columna solicitud_id NO se extrae del PDF. Es un parámetro (un UUID) que el sistema te debe entregar antes de que empieces a procesar el archivo. Cada fila que generes debe llevar este mismo solicitud_id para "atarla" a la solicitud del cliente.
+* Esquema de Destino (Supabase): Tu salida debe ser un array de objetos JSON listos para un INSERT en la tabla estados_financieros. El esquema exacto de la tabla (según la imagen) es:
+   * solicitud_id (uuid) - Proviene del parámetro de entrada.
+   * nombre_empresa (text) - Extraído del PDF.
+   * nit (numeric) - Extraído del PDF (limpio, sin guiones ni puntos).
+   * fecha_balance (date) - Extraído del PDF (formato 'YYYY-MM-DD').
+   * estado_financiero (text) - Extraído del PDF (ej: "Situacion financiera", "Estado de Resultado Integral").
+   * cuenta (text) - Nivel 1 del árbol.
+   * subcuenta (text) - Nivel 2 del árbol.
+   * subcuenta_1 (text) - Nivel 3 del árbol.
+   * subcuenta_2 (text) - Nivel 4 del árbol.
+   * valor (numeric) - El número limpio.
+5. Entradas y Ejemplos
+* Entrada (Input):
+   1. Un archivo PDF (ej: Balances a Marzo 31 de 2024.pdf).
+   2. Un UUID (ej: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8") que corresponde al solicitud_id.
+* Salida (Output - Payload para Supabase): Un JSON array. (Fíjate cómo el solicitud_id se repite en cada objeto).
+JSON
+[
+  {
+    "solicitud_id": "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8",
+    "nombre_empresa": "TRANSPORTES OBRAS E INVERSIONES DE ANTIOQUIA S.A.S.",
+    "nit": 9015683556,
+    "fecha_balance": "2024-03-31",
+    "estado_financiero": "Situacion financiera",
+    "cuenta": "ACTIVOS",
+    "subcuenta": "DISPONIBLE",
+    "subcuenta_1": "Efectivo y equivalentes",
+    "subcuenta_2": null,
+    "valor": 14499016
+  },
+  {
+    "solicitud_id": "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8",
+    "nombre_empresa": "TRANSPORTES OBRAS E INVERSIONES DE ANTIOQUIA S.A.S.",
+    "nit": 9015683556,
+    "fecha_balance": "2024-03-31",
+    "estado_financiero": "Situacion financiera",
+    "cuenta": "ACTIVOS",
+    "subcuenta": "CLIENTES",
+    "subcuenta_1": "Cuentas por cobrar",
+    "subcuenta_2": null,
+    "valor": 353931746
+  },
+  {
+    "solicitud_id": "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8",
+    "nombre_empresa": "TRANSPORTES OBRAS E INVERSIONES DE ANTIOQUIA S.A.S.",
+    "nit": 9015683556,
+    "fecha_balance": "2024-03-31",
+    "estado_financiero": "Estado de Resultado Integral",
+    "cuenta": "GASTOS",
+    "subcuenta": "GASTOS ADMINISTRACION",
+    "subcuenta_1": "Gastos de Personal",
+    "subcuenta_2": null,
+    "valor": 13867099
+  }
+]
