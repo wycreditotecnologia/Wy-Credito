@@ -10,7 +10,7 @@ export async function extractWordsFromPdf(file: File): Promise<Word[]> {
   for (let p = 1; p <= pdf.numPages; p++) {
     const page = await pdf.getPage(p)
     const viewport = page.getViewport({ scale: 1 })
-    const content = await page.getTextContent({ normalizeWhitespace: true })
+    const content = await page.getTextContent()
     for (const item of content.items as any[]) {
       if (!item?.str || !item?.transform) continue
       const [a, b, c, d, e, f] = item.transform as number[]
