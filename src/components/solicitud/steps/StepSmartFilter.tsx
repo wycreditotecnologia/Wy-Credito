@@ -39,8 +39,12 @@ export default function StepSmartFilter({
             return;
         }
 
-        if (file.size > 10 * 1024 * 1024) {
-            toast.error("El archivo no debe superar 10MB");
+        // Límite configurable (por defecto 12MB)
+        const maxFileSize = parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '12582912', 10);
+        const maxFileSizeMB = Math.round(maxFileSize / (1024 * 1024));
+
+        if (file.size > maxFileSize) {
+            toast.error(`El archivo no debe superar ${maxFileSizeMB}MB`);
             return;
         }
 
@@ -193,7 +197,7 @@ export default function StepSmartFilter({
                             {uploading ? "Subiendo documento..." : uploadedFile ? "✅ Documento cargado" : "Cargar Cámara de Comercio"}
                         </p>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                            PDF (Máx. 10MB)
+                            PDF (Máx. 12MB)
                         </p>
                     </div>
                     <input
